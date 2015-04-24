@@ -18,6 +18,7 @@
                  [noir-exception "0.2.3"]
                  [bouncer "0.3.2"]
                  [prone "0.8.1"]
+                 [org.clojure/clojurescript "0.0-3211"]
                  [org.clojure/tools.nrepl "0.2.8"]]
 
   :min-lein-version "2.0.0"

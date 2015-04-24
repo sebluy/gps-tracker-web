@@ -1,25 +1,28 @@
-<!DOCTYPE html>
-<html>
-  <head>
-      <style type="text/css">
-      html, body, #map-canvas { height: 100%; margin: 0; padding: 0;}
-          </style>
-	      <script type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js">
-          </script>
-	      <script type="text/javascript">
-      function initialize() {
-	              var mapOptions = {
-			                center: { lat: -34.397, lng: 150.644},
-						          zoom: 8
-								          };
-		              var map = new google.maps.Map(document.getElementById('map-canvas'),
-					                  mapOptions);
-			            }
-      google.maps.event.addDomListener(window, 'load', initialize);
-          </script>
-	    </head>
-	      <body>
-	      <div id="map-canvas"></div>
-	        </body>
-		</html>
+{% extends "base.html" %}
+{% block content %}
+  <div id="map-canvas" class="col-md-12"></div>
+{% endblock %}
+{% block page-scripts %}
+  <script type="text/javascript">
+    function initialize() {
+      var mapOptions = {
+        center: { lat: 44.9013069, lng: -68.6584454 },
+        zoom: 8
+      };
+      var map = new google.maps.Map(document.getElementById('map-canvas'),
+        mapOptions);
+      var points = [
+        { lat: 45.0, lng: -68.0 },
+        { lat: 44.0, lng: -69.0 }] ;
+      var path = new google.maps.Polyline({
+          path: points,
+          geodesic: true,
+          strokeColor: '#FF0000',
+          strokeOpacity: 1.0,
+          strokeWeight: 2
+      }) ;
+      path.setMap(map) ;
+    }
+    google.maps.event.addDomListener(window, 'load', initialize);
+  </script>
+{% endblock %}
