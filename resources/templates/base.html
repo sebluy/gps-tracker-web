@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html>
-  <head>
+<html> <head>
     <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Welcome to gps-watch-web</title>
   </head>
@@ -23,6 +22,10 @@
             </li>
             <li {% ifequal page "map.html" %} class="active"{%endifequal%}>
               <a href="{{servlet-context}}/map">Map</a>
+            </li>
+            <li {% ifequal page "coordinates.html" %}
+              class="active"{%endifequal%}>
+              <a href="{{servlet-context}}/coordinates">Coordinates</a>
             </li>
           </ul>
         </div>
@@ -49,6 +52,7 @@
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js">
     </script>
+    <script type="text/javascript" src="/js/map.js"><script/>
     <script type="text/javascript">
       var context = "{{servlet-context}}";
     </script>

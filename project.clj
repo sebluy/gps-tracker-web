@@ -4,6 +4,9 @@
   :url "http://example.com/FIXME"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
+                 [org.clojure/clojurescript "0.0-3211"]
+                 [org.clojure/tools.nrepl "0.2.8"]
+                 [org.clojure/data.json "0.2.6"]
                  [ring-server "0.4.0"]
                  [selmer "0.8.2"]
                  [com.taoensso/timbre "3.4.0"]
@@ -18,8 +21,9 @@
                  [noir-exception "0.2.3"]
                  [bouncer "0.3.2"]
                  [prone "0.8.1"]
-                 [org.clojure/clojurescript "0.0-3211"]
-                 [org.clojure/tools.nrepl "0.2.8"]]
+                 [ragtime "0.3.8"]
+                 [yesql "0.5.0-rc1"]
+                 [org.postgresql/postgresql "9.3-1102-jdbc41"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "gps-watch-web.jar"
@@ -33,7 +37,12 @@
   :plugins [[lein-ring "0.9.1"]
             [lein-environ "1.0.0"]
             [lein-ancient "0.6.5"]
-            [lein-cljsbuild "1.0.4"]]
+            [lein-cljsbuild "1.0.4"]
+            [ragtime/ragtime.lein "0.3.8"]]
+  :ragtime
+    {:migrations ragtime.sql.files/migrations
+     :database
+     "jdbc:postgresql://localhost/gpswatch?user=admin&password=admin"}
 
   :cljsbuild
   {:builds {:app {:source-paths ["src-cljs"]
@@ -44,18 +53,11 @@
                              :optimizations :none
                              :pretty-print true}}}}
 
-
-  
-
-  
-
   :ring {:handler gps-watch-web.handler/app
          :init    gps-watch-web.handler/init
          :destroy gps-watch-web.handler/destroy
          :uberwar-name "gps-watch-web.war"}
-  
-  
-  
+
   :profiles
   {:uberjar {:omit-source true
              :env {:production true}

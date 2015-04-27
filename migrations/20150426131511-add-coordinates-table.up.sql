@@ -1,0 +1,4 @@
+CREATE TABLE coordinates
+(id SERIAL PRIMARY KEY, 
+ latitude DOUBLE PRECISION,
+ longitude DOUBLE PRECISION);

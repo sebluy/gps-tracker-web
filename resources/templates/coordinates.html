@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="row">
+    <div class="span12">
+      <ul class="coordinates">
+        {% for coordinate in coordinates %}
+        <li>
+          <p>{{coordinate.latitude}}</p>
+          <p>{{coordinate.longitude}}</p>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+{% endblock %}

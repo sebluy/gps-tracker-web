@@ -1,45 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
-  <div>
-    <form id="pos">
-      Lat<input id="lat" type="text" name="lat">
-      Long<input id="lng" type="text" name="lng">
-      <input type="submit" value="Submit">
-    </form>
-  </div>
+  <div id="coordinates" hidden>{{coordinates}}</div>
   <div id="map-canvas" class="col-md-12"></div>
 {% endblock %}
 {% block page-scripts %}
   <script type="text/javascript">
-    function initialize() {
-      var mapOptions = {
-        center: { lat: 44.9013069, lng: -68.6584454 },
-        zoom: 8
-      };
-      var oldPoint = mapOptions.center ;
-      var map = new google.maps.Map(document.getElementById('map-canvas'),
-        mapOptions);
-      $('#pos').submit(function(event) {
-        var lat = parseFloat($('#lat').val()) ;
-        var lng = parseFloat($('#lng').val()) ;
-        var newPoint = { lat: lat, lng: lng} ;
-        addPoint(newPoint, oldPoint, map) ;
-        oldPoint = newPoint ;
-        event.preventDefault() ;
-      }) ;
-    }
-
-    function addPoint(newPoint, lastPoint, map) {
-      var points = [lastPoint, newPoint] ;
-      var path = new google.maps.Polyline({
-          path: points,
-          geodesic: true,
-          strokeColor: '#FF0000',
-          strokeOpacity: 1.0,
-          strokeWeight: 2
-      }) ;
-      path.setMap(map) ;
-    }
-    google.maps.event.addDomListener(window, 'load', initialize);
+    google.maps.event.addDomListener(window, 'load', initializeMap);
   </script>
 {% endblock %}
