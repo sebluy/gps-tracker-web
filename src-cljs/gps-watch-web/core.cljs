@@ -1,46 +1,37 @@
-(ns test.core
-  (:require [reagent.core :as reagent :refer [atom]]
-            [secretary.core :as secretary]
-            [reagent.session :as session]
-            [reagent-forms.core :refer [bind-fields]]
-            [ajax.core :refer [GET POST]])
-  (:require-macros [secretary.core :refer [defroute]]))
+(ns gps-watch-web.core
+  (:require [goog.events :as events]
+            [goog.dom :as dom]))
 
-(defn navbar []
-      [:div.navbar.navbar-inverse.navbar-fixed-top
-       [:div.container
-        [:div.navbar-header
-         [:a.navbar-brand {:href "#/"} "test"]]
-        [:div.navbar-collapse.collapse
-         [:ul.nav.navbar-nav
-          [:li {:class (when (= :home (session/get :page)) "active")}
-           [:a {:on-click #(secretary/dispatch! "#/")} "Home"]]
-          [:li {:class (when (= :about (session/get :page)) "active")}
-           [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]]]]])
+(def zoom 16)
+(def canvas-id "map-canvas")
+(def coordinates-id "coordinates")
 
-(defn about-page []
-  [:div "this is the story of test... work in progress"])
+(defn get-canvas []
+  (dom/getElement canvas-id))
 
-(defn home-page []
-  [:div
-   [:h2 "Welcome to ClojureScript"]])
+(defn parse-coordinates []
+  (->> (dom/getElement coordinates-id)
+       (dom/getTextContent)
+       (.parse js/JSON)
+       (js->clj)))
 
-(def pages
-  {:home #'home-page
-   :about #'about-page})
+(defn add-point [last-point new-point google-map]
+  (.setMap (google.maps.Polyline.
+             (clj->js {:path [last-point new-point]
+                        :geodesic true
+                        :strokeColor "#FF0000"
+                        :strokeOpacity 1.0
+                        :strokeWeight 2}))
+           google-map))
 
-(defn page []
-  [(pages (session/get :page))])
-
-(defroute "/" [] (session/put! :page :home))
-(defroute "/about" [] (session/put! :page :about))
-
-(defn mount-components []
-  (reagent/render-component [navbar] (.getElementById js/document "navbar"))
-  (reagent/render-component [page] (.getElementById js/document "app")))
+(defn map-load []
+  (let [coordinates (parse-coordinates)
+        map-options {:center (coordinates 0) :zoom zoom}
+        google-map (google.maps.Map. (get-canvas) (clj->js map-options))]
+    (reduce (fn [last-point new-point]
+              (do (add-point last-point new-point google-map)
+                  new-point))
+            coordinates)))
 
 (defn init! []
-  (secretary/set-config! :prefix "#")
-  (session/put! :page :home)
-  (mount-components))
-
+  (map-load))

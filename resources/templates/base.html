@@ -52,10 +52,18 @@
     <script type="text/javascript"
       src="https://maps.googleapis.com/maps/api/js">
     </script>
-    <script type="text/javascript" src="/js/map.js"><script/>
     <script type="text/javascript">
       var context = "{{servlet-context}}";
     </script>
+    {% if dev %}
+      {% script "/js/out/goog/base.js" %}
+      {% script "/js/app.js" %}
+      <script type="text/javascript">
+        goog.require("gps_watch_web.app");
+      </script>
+    {% else %}
+      {% script "/js/app.js" %}
+    {% endif %}
     {% block page-scripts %}
     {% endblock %}
   </body>

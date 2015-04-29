@@ -25,12 +25,7 @@
                  [prone "0.8.1"]
                  [ragtime "0.3.8"]
                  [yesql "0.5.0-rc1"]
-                 [org.postgresql/postgresql "9.3-1102-jdbc41"]
-                 [reagent "0.5.0"]
-                 [reagent-forms "0.5.0"]
-                 [reagent-utils "0.1.4"]
-                 [secretary "1.2.3"]
-                 [cljs-ajax "0.3.11"]]
+                 [org.postgresql/postgresql "9.3-1102-jdbc41"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "gps-watch-web.jar"

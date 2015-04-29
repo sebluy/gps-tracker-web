@@ -1,4 +1,4 @@
-(ns test.dev
+(ns gps-watch-web.dev
   (:require [cemerick.piggieback :as piggieback]
             [weasel.repl.websocket :as weasel]
             [leiningen.core.main :as lein]))
