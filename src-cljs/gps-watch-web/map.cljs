@@ -1,6 +1,7 @@
 (ns gps-watch-web.map
   (:require [goog.events :as events]
-            [goog.dom :as dom]))
+            [goog.dom :as dom]
+            [ajax.core :refer [GET]]))
 
 (def zoom 16)
 (def canvas-id "map-canvas")
@@ -10,32 +11,31 @@
 (defn get-canvas []
   (dom/getElement canvas-id))
 
-(defn parse-coordinates []
-  (->> (dom/getElement coordinates-id)
-       (dom/getTextContent)
-       (.parse js/JSON)
-       (js->clj)))
-
 (defn add-point [last-point new-point google-map]
   (.setMap (google.maps.Polyline.
              (clj->js {:path [last-point new-point]
-                        :geodesic true
-                        :strokeColor "#FF0000"
-                        :strokeOpacity 1.0
-                        :strokeWeight 2}))
+                       :geodesic true
+                       :strokeColor "#FF0000"
+                       :strokeOpacity 1.0
+                       :strokeWeight 2}))
            google-map))
 
-(comment
-  (defn load []
-    (let [coordinates (parse-coordinates)
-          map-options {:center (coordinates 0) :zoom zoom}
-          google-map (google.maps.Map. (get-canvas) (clj->js map-options))]
-      (reduce (fn [last-point new-point]
-                (do (add-point last-point new-point google-map)
-                    new-point))
-              coordinates))))
+(defn draw-coordinates [coordinates]
+  (let [map-options {:center (first coordinates) :zoom zoom}
+        google-map (google.maps.Map. (get-canvas) (clj->js map-options))]
+    (reduce (fn [last-point new-point]
+              (do
+                (add-point last-point new-point google-map)
+                new-point))
+            coordinates)))
+
+(defn handle-coordinates [response]
+  (draw-coordinates (response :coordinates)))
+
+(defn get-coordinates []
+  (GET "/coordinates" {:handler handle-coordinates
+                       :response-format :edn}))
 
 (defn load []
-  (let [map-options {:center center :zoom zoom}]
-    (google.maps.Map. (get-canvas) (clj->js map-options))))
-
+  (get-coordinates))
+  
