@@ -8,26 +8,35 @@
 (def coordinates-id "coordinates")
 (def center (google.maps.LatLng. 44.9 -68.7))
 
+(def google-map nil)
+(def poly nil)
+
+(def path-options
+  {:geodesic true
+   :strokeColor "#FF0000"
+   :strokeOpacity 1.0
+   :strokeWeight 2})
+
 (defn get-canvas []
   (dom/getElement canvas-id))
 
-(defn add-point [last-point new-point google-map]
-  (.setMap (google.maps.Polyline.
-             (clj->js {:path [last-point new-point]
-                       :geodesic true
-                       :strokeColor "#FF0000"
-                       :strokeOpacity 1.0
-                       :strokeWeight 2}))
-           google-map))
+(defn make-polyline [coordinates]
+  (set! poly
+        (google.maps.Polyline.
+          (clj->js (merge {:path coordinates} path-options)))))
+
+(defn make-google-map [center]
+  (let [map-options {:center (clj->js center) :zoom zoom}]
+    (set! google-map (google.maps.Map. (get-canvas) (clj->js map-options)))))
+
+(defn add-point [event]
+  (.push (.getPath poly) (.-latLng event)))
 
 (defn draw-coordinates [coordinates]
-  (let [map-options {:center (first coordinates) :zoom zoom}
-        google-map (google.maps.Map. (get-canvas) (clj->js map-options))]
-    (reduce (fn [last-point new-point]
-              (do
-                (add-point last-point new-point google-map)
-                new-point))
-            coordinates)))
+  (do (make-google-map (first coordinates))
+      (make-polyline coordinates)
+      (.setMap poly google-map)
+      (google.maps.event.addListener google-map "click" add-point)))
 
 (defn handle-coordinates [response]
   (draw-coordinates (response :coordinates)))
