@@ -1,6 +1,6 @@
-(ns gps-watch-web.routes.home
-  (:require [gps-watch-web.layout :as layout]
-            [gps-watch-web.db.core :as db]
+(ns gps-tracker.routes.home
+  (:require [gps-tracker.layout :as layout]
+            [gps-tracker.db.core :as db]
             [compojure.core :refer [defroutes GET]]
             [ring.util.response :refer [response]]))
 

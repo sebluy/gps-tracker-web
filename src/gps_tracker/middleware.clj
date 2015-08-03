@@ -1,5 +1,5 @@
-(ns gps-watch-web.middleware
-  (:require [gps-watch-web.session :as session]
+(ns gps-tracker.middleware
+  (:require [gps-tracker.session :as session]
             [taoensso.timbre :as timbre]
             [environ.core :refer [env]]
             [selmer.middleware :refer [wrap-error-page]]
@@ -9,9 +9,7 @@
             [ring.middleware.session-timeout :refer [wrap-idle-session-timeout]]
             [noir-exception.core :refer [wrap-internal-error]]
             [ring.middleware.session.memory :refer [memory-store]]
-            [ring.middleware.format :refer [wrap-restful-format]]
-            
-            ))
+            [ring.middleware.format :refer [wrap-restful-format]]))
 
 (defn log-request [handler]
   (fn [req]

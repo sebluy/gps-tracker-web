@@ -1,6 +1,6 @@
-(defproject gps-watch-web "0.1.0-SNAPSHOT"
+(defproject gps-tracker "0.1.0-SNAPSHOT"
 
-  :description "FIXME: write description"
+  :description "The web interface for a GPS tracker application"
   :url "http://example.com/FIXME"
 
   :dependencies [[org.clojure/clojure "1.6.0"]
@@ -34,76 +34,66 @@
                  [org.postgresql/postgresql "9.3-1102-jdbc41"]]
 
   :min-lein-version "2.0.0"
-  :uberjar-name "gps-watch-web.jar"
-  :repl-options {:init-ns gps-watch-web.handler}
+  :uberjar-name "gps-tracker.jar"
   :jvm-opts ["-server"]
 
   :env {:repl-port 7001}
 
-  :main gps-watch-web.core
+  :main gps-tracker.core
 
-  :plugins [[lein-ring "0.9.1"]
-            [lein-environ "1.0.0"]
+  :plugins [[lein-environ "1.0.0"]
             [lein-ancient "0.6.5"]
-            [lein-cljsbuild "1.0.4"]
+            [lein-figwheel "0.3.3"]
+            [lein-cljsbuild "1.0.5"]
             [ragtime/ragtime.lein "0.3.8"]]
 
   :ragtime
-    {:migrations ragtime.sql.files/migrations
-     :database
-     "jdbc:postgresql://localhost/gpswatch?user=admin&password=admin"}
-
-  :cljsbuild
-  {:builds {:app {:source-paths ["src-cljs"]
-                  :compiler {:output-to "resources/public/js/app.js"
-                             :output-dir "resources/public/js/out"
-                             :externs ["react/externs/react.js"]
-                             :optimizations :none
-                             :pretty-print true}}}}
-
-  :ring {:handler gps-watch-web.handler/app
-         :init    gps-watch-web.handler/init
-         :destroy gps-watch-web.handler/destroy
-         :uberwar-name "gps-watch-web.war"}
+  {:migrations ragtime.sql.files/migrations
+   :database
+               "jdbc:postgresql://localhost/gpstracker?user=admin&password=admin"}
 
   :clean-targets ^{:protect false} ["resources/public/js"]
+  :cljsbuild
+  {:builds {:app {:source-paths ["src-cljs"]
+                  :compiler     {:output-to     "resources/public/js/app.js"
+                                 :main          "gps-tracker.env"
+                                 :output-dir    "resources/public/js/out"
+                                 :asset-path    "js/out"
+                                 :externs       ["react/externs/react.js"]
+                                 :optimizations :none
+                                 :pretty-print  true}}}}
 
   :profiles
-  {:uberjar {:omit-source true
-             :env {:production true}
-             :hooks [leiningen.cljsbuild]
-             :cljsbuild
-             {:jar true
-              :builds
-              {:app
-               {:source-paths ["env/prod/cljs"]
-                :compiler {:optimizations :advanced :pretty-print false}}}} 
-             
-             :aot :all}
-   :dev {:dependencies [[ring-mock "0.1.5"]
-                        [ring/ring-devel "1.3.2"]
-                        [pjstadig/humane-test-output "0.7.0"]
-                        [leiningen "2.5.1"]
-                        [figwheel "0.2.6"]
-                        [weasel "0.6.0"]
-                        [com.cemerick/piggieback "0.2.1"]
-                        [org.clojure/tools.nrepl "0.2.10"]]
-         :source-paths ["env/dev/clj"]
+  {:uberjar {:omit-source  true
+             :source-paths ["env/prod/clj"]
+             :env          {:production true}
+             :hooks        [leiningen.cljsbuild]
+             :cljsbuild    {:jar true
+                            :builds
+                                 {:app
+                                  {:source-paths ["env/prod/cljs"]
+                                   :compiler     {:optimizations :advanced
+                                                  :elide-asserts :true
+                                                  :pretty-print  false}}}}
 
-         :plugins [[lein-figwheel "0.2.5"]]
+             :aot          :all}
+   :dev     {:dependencies [[ring-mock "0.1.5"]
+                            [ring/ring-devel "1.3.2"]
+                            [pjstadig/humane-test-output "0.7.0"]
+                            [figwheel "0.3.3"]]
 
-         :cljsbuild
-         {:builds
-          {:app
-           {:source-paths ["env/dev/cljs"] :compiler {:source-map true}}}}
+             :source-paths ["env/dev/clj"]
+             :cljsbuild    {:builds
+                            {:app
+                             {:source-paths ["env/dev/cljs"] :compiler {:source-map true}}}}
 
-         :figwheel
-         {:http-server-root "public"
-          :server-port 3449
-          :css-dirs ["resources/public/css"]
-          :ring-handler gps-watch-web.handler/app}
+             :figwheel     {:http-server-root "public"
+                            :server-port      3449
+                            :nrepl-port       7888
+                            :css-dirs         ["resources/public/css"]
+                            :ring-handler     gps-tracker.handler/app}
 
-         :repl-options {:init-ns gps-watch-web.repl}
-         :injections [(require 'pjstadig.humane-test-output)
-                      (pjstadig.humane-test-output/activate!)]
-         :env {:dev true}}})
+             :repl-options {:init-ns gps-tracker.dev}
+             :injections   [(require 'pjstadig.humane-test-output)
+                            (pjstadig.humane-test-output/activate!)]
+             :env          {:dev true}}})

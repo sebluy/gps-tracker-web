@@ -1,4 +1,4 @@
-(ns gps-watch-web.session
+(ns gps-tracker.session
   (:require [cronj.core :refer [cronj]]))
 
 (defonce mem (atom {}))

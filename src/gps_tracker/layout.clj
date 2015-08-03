@@ -1,4 +1,4 @@
-(ns gps-watch-web.layout
+(ns gps-tracker.layout
   (:require [selmer.parser :as parser]
             [selmer.filters :as filters]
             [markdown.core :refer [md-to-html-string]]

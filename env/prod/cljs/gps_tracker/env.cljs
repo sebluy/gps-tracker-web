@@ -1,5 +1,5 @@
-(ns gps-watch-web.app
-  (:require [gps-watch-web.core :as core]))
+(ns gps-tracker.env
+  (:require [gps-tracker.core :as core]))
 
 ;;ignore println statements in prod
 (set! *print-fn* (fn [& _]))

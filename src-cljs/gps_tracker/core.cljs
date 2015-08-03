@@ -1,10 +1,10 @@
-(ns gps-watch-web.core
+(ns gps-tracker.core
   (:require [reagent.core :as reagent :refer [atom]]
             [secretary.core :as secretary]
             [reagent.session :as session]
             [reagent-forms.core :refer [bind-fields]]
             [ajax.core :refer [GET POST]]
-            [gps-watch-web.map :as map])
+            [gps-tracker.map :as map])
   (:require-macros [secretary.core :refer [defroute]]))
 
 (defn navbar []

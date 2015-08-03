@@ -1,4 +1,4 @@
-(ns gps-watch-web.map
+(ns gps-tracker.map
   (:require [goog.events :as events]
             [goog.dom :as dom]
             [ajax.core :refer [GET]]))

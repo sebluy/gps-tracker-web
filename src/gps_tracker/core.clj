@@ -1,5 +1,5 @@
-(ns gps-watch-web.core
-  (:require [gps-watch-web.handler :refer [app]]
+(ns gps-tracker.core
+  (:require [gps-tracker.handler :refer [app]]
             [ring.adapter.jetty :refer [run-jetty]])
   (:gen-class))
 

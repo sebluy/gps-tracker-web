@@ -1,10 +1,9 @@
-(ns gps-watch-web.handler
+(ns gps-tracker.handler
   (:require [compojure.core :refer [defroutes routes]]
-            [gps-watch-web.routes.home :refer [home-routes]]
-            
-            [gps-watch-web.middleware
+            [gps-tracker.routes.home :refer [home-routes]]
+            [gps-tracker.middleware
              :refer [development-middleware production-middleware]]
-            [gps-watch-web.session :as session]
+            [gps-tracker.session :as session]
             [compojure.route :as route]
             [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.rotor :as rotor]
@@ -48,20 +47,20 @@
 
   (timbre/set-config!
     [:shared-appender-config :rotor]
-    {:path "gps_watch_web.log" :max-size (* 512 1024) :backlog 10})
+    {:path "gps_tracker.log" :max-size (* 512 1024) :backlog 10})
 
   (if (env :dev) (parser/cache-off!))
   (start-nrepl)
   ;;start the expired session cleanup job
   (cronj/start! session/cleanup-job)
-  (timbre/info "\n-=[ gps-watch-web started successfully"
+  (timbre/info "\n-=[ gps-tracker started successfully"
                (when (env :dev) "using the development profile") "]=-"))
 
 (defn destroy
   "destroy will be called when your application
    shuts down, put any clean up code here"
   []
-  (timbre/info "gps-watch-web is shutting down...")
+  (timbre/info "gps-tracker is shutting down...")
   (stop-nrepl)
   (cronj/shutdown! session/cleanup-job)
   (timbre/info "shutdown complete!"))

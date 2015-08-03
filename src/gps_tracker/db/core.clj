@@ -1,4 +1,4 @@
-(ns gps-watch-web.db.core
+(ns gps-tracker.db.core
   (:require
     [yesql.core :refer [defqueries]]))
 
@@ -9,6 +9,4 @@
 
 (defqueries "sql/queries.sql" {:connection db-spec})
 
-(add-coordinate! {:latitude 44.9022426 :longitude -68.6624197})
-(get-coordinates)
 
