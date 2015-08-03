@@ -1,13 +1,9 @@
 (ns gps-tracker.core
-  (:require [reagent.core :as reagent :refer [atom]]
-            [secretary.core :as secretary]
-            [reagent.session :as session]
-            [reagent-forms.core :refer [bind-fields]]
-            [ajax.core :refer [GET POST]]
-            [gps-tracker.map :as map])
-  (:require-macros [secretary.core :refer [defroute]]))
+  (:require [reagent.core :as reagent]
+            #_[ajax.core :refer [GET POST]]
+            #_[gps-tracker.map :as map]))
 
-(defn navbar []
+#_(defn navbar []
       [:div.navbar.navbar-inverse.navbar-fixed-top
        [:div.container
         [:div.navbar-header
@@ -21,46 +17,46 @@
           [:li {:class (when (= :map (session/get :page)) "active")}
            [:a {:on-click #(secretary/dispatch! "#/map")} "Map"]]]]]])
 
-(defn about-page []
+#_(defn about-page []
   [:div
    [:div "this is the story of test... work in progress"]
    [:p "penis"]
    [:p "johnny trueman is gay"]
    [:p "johnny sucks dick"]])
 
-(defn home-page []
+#_(defn home-page []
   [:div
    [:h2 "Welcome to ClojureScript"]])
 
-(defn map-div []
+#_(defn map-div []
   [:div#map-canvas.col-md-12])
 
-(defn google-map []
+#_(defn google-map []
   (reagent/create-class
     {:reagent-render map-div
      :component-did-mount map/load}))
 
-(defn map-page []
+#_(defn map-page []
   [google-map])
 
-(def pages
+#_(def pages
   {:home #'home-page
    :about #'about-page
    :map #'map-page})
 
-(defn page []
+#_(defn page []
   [(pages (session/get :page))])
 
-(defroute "/" [] (session/put! :page :home))
-(defroute "/about" [] (session/put! :page :about))
-(defroute "/map" [] (session/put! :page :map))
+;(defroute "/" [] (session/put! :page :home))
+;(defroute "/about" [] (session/put! :page :about))
+;(defroute "/map" [] (session/put! :page :map))
+
+(defn page []
+  [:div "This page is working"])
 
 (defn mount-components []
-  (reagent/render-component [navbar] (.getElementById js/document "navbar"))
   (reagent/render-component [page] (.getElementById js/document "app")))
 
 (defn init! []
-  (secretary/set-config! :prefix "#")
-  (session/put! :page :home)
   (mount-components))
 

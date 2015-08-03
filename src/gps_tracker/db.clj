@@ -1,9 +1,8 @@
-(ns gps-tracker.db.core
-  (:require
-    [yesql.core :refer [defqueries]]))
+(ns gps-tracker.db
+  (:require [yesql.core :refer [defqueries]]))
 
 (def db-spec {:subprotocol "postgresql"
-              :subname "//localhost/gpswatch"
+              :subname "//localhost/gpstracker"
               :user "admin"
               :password "admin"})
 
