@@ -9,3 +9,6 @@
 
 (defqueries "sql/queries.sql" {:connection db-spec})
 
+(add-coordinate! {:latitude 44.9022426 :longitude -68.6624197})
+(get-coordinates)
+

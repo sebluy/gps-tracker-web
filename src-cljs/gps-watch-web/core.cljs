@@ -24,13 +24,13 @@
 (defn about-page []
   [:div
    [:div "this is the story of test... work in progress"]
-   [:p "penis"]])
+   [:p "penis"]
+   [:p "johnny trueman is gay"]
+   [:p "johnny sucks dick"]])
 
 (defn home-page []
-  (with-meta
-    [:div
-     [:h2 "Welcome to ClojureScript"]]
-    {:component-did-mount #(println %)}))
+  [:div
+   [:h2 "Welcome to ClojureScript"]])
 
 (defn map-div []
   [:div#map-canvas.col-md-12])

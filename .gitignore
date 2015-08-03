@@ -2,6 +2,8 @@
 /lib
 /classes
 /checkouts
+/resources/public/js/
+.idea
 pom.xml
 *.jar
 *.class

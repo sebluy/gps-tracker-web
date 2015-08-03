@@ -99,7 +99,6 @@
 
          :figwheel
          {:http-server-root "public"
-          :nrepl-port 7888
           :server-port 3449
           :css-dirs ["resources/public/css"]
           :ring-handler gps-watch-web.handler/app}
