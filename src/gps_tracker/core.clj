@@ -2,12 +2,24 @@
   (:require [gps-tracker.page :as page]
             [ring.adapter.jetty :as jetty]
             [ring.middleware.defaults :as middleware]
+            [ring.util.response :as response]
             [hiccup.core :as hiccup]
             [compojure.core :as compojure])
   (:gen-class))
 
+(defmulti api-action first)
+
+(defmethod api-action :add-path [[_ path]]
+  (db/add-path path))
+
+(defn api [actions]
+  (doseq [action actions]
+    (api-action action))
+  (response/response nil))
+
 (compojure/defroutes
   routes
+  (compojure/ANY "/api" {actions :body-params} (api actions))
   (compojure/GET "/" [] (hiccup/html (page/page))))
 
 (defn parse-port [port]
