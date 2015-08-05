@@ -5,12 +5,17 @@
 
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.28"]
+                 [sigsub "0.1.0"]
+                 [cljs-ajax "0.3.14"]
+                 [environ "1.0.0"]
                  [hiccup "1.0.5"]
                  [reagent "0.5.0"]
                  [compojure "1.4.0"]
                  [cljsjs/google-maps "3.18-1"]
                  [ring/ring-jetty-adapter "1.4.0"]
                  [ring/ring-defaults "0.1.5"]
+                 [ring-middleware-format "0.5.0"]
+                 [ring/ring-devel "1.4.0"]
                  [yesql "0.4.2"]
                  [org.postgresql/postgresql "9.3-1103-jdbc41"]]
 

@@ -4,6 +4,7 @@
 /checkouts
 /resources/public/js/
 .idea
+.repl
 pom.xml
 *.jar
 *.class

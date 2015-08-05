@@ -1,7 +1,5 @@
 Current:
 
-Add api for adding "paths"
-
 Todo:
 
 Add ui list for "paths"

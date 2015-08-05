@@ -1,58 +1,58 @@
 (ns gps-tracker.core
   (:require [reagent.core :as reagent]
-            #_[ajax.core :refer [GET POST]]
-            #_[gps-tracker.map :as map]))
-
-#_(defn navbar []
-      [:div.navbar.navbar-inverse.navbar-fixed-top
-       [:div.container
-        [:div.navbar-header
-         [:a.navbar-brand {:href "#/"} "GPS Watch"]]
-        [:div.navbar-collapse.collapse
-         [:ul.nav.navbar-nav
-          [:li {:class (when (= :home (session/get :page)) "active")}
-           [:a {:on-click #(secretary/dispatch! "#/")} "Home"]]
-          [:li {:class (when (= :about (session/get :page)) "active")}
-           [:a {:on-click #(secretary/dispatch! "#/about")} "About"]]
-          [:li {:class (when (= :map (session/get :page)) "active")}
-           [:a {:on-click #(secretary/dispatch! "#/map")} "Map"]]]]]])
-
-#_(defn about-page []
-  [:div
-   [:div "this is the story of test... work in progress"]
-   [:p "penis"]
-   [:p "johnny trueman is gay"]
-   [:p "johnny sucks dick"]])
-
-#_(defn home-page []
-  [:div
-   [:h2 "Welcome to ClojureScript"]])
+            [sigsub.core :as sigsub :include-macros true]
+            [gps-tracker.db :as db]
+            [ajax.core :as ajax]
+    #_[gps-tracker.map :as map]))
 
 #_(defn map-div []
-  [:div#map-canvas.col-md-12])
+    [:div#map-canvas.col-md-12])
 
 #_(defn google-map []
-  (reagent/create-class
-    {:reagent-render map-div
-     :component-did-mount map/load}))
+    (reagent/create-class
+      {:reagent-render      map-div
+       :component-did-mount map/load}))
 
 #_(defn map-page []
-  [google-map])
+    [google-map])
 
-#_(def pages
-  {:home #'home-page
-   :about #'about-page
-   :map #'map-page})
+(defn receive-path [response]
+  (db/transition (fn [db] (assoc db :path (first response)))))
 
-#_(defn page []
-  [(pages (session/get :page))])
+(defn get-path [id]
+  (ajax/POST "/api"
+             {:params          [[:get-path id]]
+              :handler         receive-path
+              :response-format :edn
+              :format          :edn}))
 
-;(defroute "/" [] (session/put! :page :home))
-;(defroute "/about" [] (session/put! :page :about))
-;(defroute "/map" [] (session/put! :page :map))
+
+(defn show-point [point]
+  [:tr
+   [:td (point :latitude)]
+   [:td (point :longitude)]])
+
+(defn path-table []
+  (sigsub/with-reagent-subs
+    [path [:path]]
+    (fn []
+      [:table.table
+       [:thead [:td "Latitude"] [:td "Longitude"]]
+       [:tbody
+        (doall
+          (map-indexed
+            (fn [index point]
+              ^{:key index}
+              [show-point point])
+            @path))]])))
 
 (defn page []
-  [:div "This page is working"])
+  [:div.container
+   [:div.row
+    [:div.span12
+     [:div.page-header
+      [:h1 "Paths"]]
+     [path-table]]]])
 
 (defn mount-components []
   (reagent/render-component [page] (.getElementById js/document "app")))

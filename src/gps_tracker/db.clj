@@ -3,16 +3,18 @@
             [clojure.java.jdbc :as sql]))
 
 (def db-spec {:subprotocol "postgresql"
-              :subname "//localhost/gpstracker"
-              :user "admin"
-              :password "admin"})
+              :subname     "//localhost/gpstracker"
+              :user        "admin"
+              :password    "admin"})
 
 (defn create-point-table! []
-  (sql/db-do-commands db-spec
-                      (sql/create-table-ddl :point
-                                            [:latitude "double precision"]
-                                            [:longitude "double precision"]
-                                            [:path_id :int])))
+  (sql/db-do-commands
+    db-spec
+    (sql/create-table-ddl
+      :point
+      [:latitude "double precision"]
+      [:longitude "double precision"]
+      [:path_id :int])))
 
 (defn add-index-to-point-table! []
   (sql/db-do-commands db-spec "ALTER TABLE point ADD index int"))
@@ -27,13 +29,21 @@
   (sql/query db-spec ["SELECT * FROM point"]))
 
 (defn get-path [id]
-  (sql/query db-spec ["SELECT * FROM point WHERE path_id = ?" id]))
+  (let [raw (sql/query
+              db-spec
+              ["SELECT * FROM point
+              WHERE path_id = ?
+              ORDER BY index ASC" id])]
+    (into [] (map #(dissoc % :path_id :index) raw))))
 
-(get-path 0)
+(defn get-path-ids []
+  (map :path_id (sql/query db-spec ["SELECT DISTINCT path_id FROM point"])))
 
 (defn next-path-id []
-  (-> (sql/query db-spec ["SELECT max(path_id) + 1 FROM point"])
-      first vals first (or 0)))
+  (let [ids (get-path-ids)]
+    (if (seq ids)
+      (+ (apply max ids) 1)
+      0)))
 
 (defn add-path! [path]
   (let [path-id (next-path-id)]
@@ -45,7 +55,10 @@
 (defn clear-points! []
   (sql/delete! db-spec :point []))
 
-(add-path! [{:latitude 34.6 :longitude 45.8}
-            {:latitude 34.7 :longitude 49.4}
-            {:latitude 23.4 :longitude 51.1}])
+#_(add-path! [{:latitude 43.6 :longitude -70.6}
+            {:latitude 43.9 :longitude -70.6}
+            {:latitude 43.9 :longitude -70.3}
+            {:latitude 43.6 :longitude -70.3}
+            {:latitude 43.6 :longitude -70.6}])
+
 
