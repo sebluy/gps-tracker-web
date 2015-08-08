@@ -52,13 +52,14 @@
                (add-point! (assoc point :path-id path-id :index index)))
              path))))
 
+(defn delete-path! [path-id]
+  (sql/delete! db-spec :point ["path_id = ?" path-id]))
+
 (defn clear-points! []
   (sql/delete! db-spec :point []))
 
-#_(add-path! [{:latitude 43.6 :longitude -70.6}
-            {:latitude 43.9 :longitude -70.6}
-            {:latitude 43.9 :longitude -70.3}
-            {:latitude 43.6 :longitude -70.3}
-            {:latitude 43.6 :longitude -70.6}])
+(add-path! [{:latitude 44.0 :longitude -70.0}
+            {:latitude 44.0 :longitude -71.0}])
+
 
 

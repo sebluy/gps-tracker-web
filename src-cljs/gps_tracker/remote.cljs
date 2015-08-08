@@ -15,6 +15,13 @@
        :response-format :edn})
     response-chan))
 
+(defn delete-path [id]
+  (db/transition
+    (fn [db]
+      (-> db
+          (update-in [:remote :path-ids] (fn [ids] (remove #(= % id) ids))))))
+  (post-actions [[:delete-path id]]))
+
 (defn get-path-ids []
   (async/go
     (db/transition (fn [db] (assoc-in db [:remote :path-ids] :pending)))

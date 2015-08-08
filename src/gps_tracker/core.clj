@@ -12,7 +12,10 @@
             [compojure.route :as route])
   (:gen-class))
 
-(defmulti api-action first)
+(defmulti api-action (comp keyword first))
+
+(defmethod api-action :delete-path [[_ path-id]]
+  (db/delete-path! path-id))
 
 (defmethod api-action :add-path [[_ path]]
   (db/add-path! path))
@@ -38,7 +41,7 @@
 
 (def handler
   (let [base-handler (-> #'routes
-                         (format/wrap-restful-format :formats [:edn])
+                         (format/wrap-restful-format :formats [:edn :json-kw])
                          (middleware/wrap-defaults middleware/api-defaults))]
     (if (environ/env :dev)
       (reload/wrap-reload base-handler)

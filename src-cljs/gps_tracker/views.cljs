@@ -2,11 +2,12 @@
   (:require [gps-tracker.db :as db]
             [gps-tracker.subs]
             [gps-tracker.map :as map]
+            [gps-tracker.handlers :as handlers]
             [sigsub.core :as sigsub :include-macros true]
             [reagent.core :as reagent]))
 
 (defn map-div []
-    [:div#map-canvas.col-md-12])
+    [:div#map-canvas])
 
 (defn google-map [path]
   (reagent/create-class
@@ -24,7 +25,8 @@
 (defn show-point [point]
   [:tr
    [:td (point :latitude)]
-   [:td (point :longitude)]])
+   [:td (point :longitude)]
+   ])
 
 (defn path-table []
   (sigsub/with-reagent-subs
@@ -48,8 +50,21 @@
     (fn []
       (when @path-id
         [:div
-         [path-table]
-         [google-map-slot]]))))
+         [:div.col-md-6 [path-table]]
+         [:div.col-md-6 [google-map-slot]]]))))
+
+(defn show-path-id [id]
+  ^{:key id}
+  [:li
+   [:p id]
+   [:input.btn.btn-primary
+    {:value "Show"
+     :type "button"
+     :on-click #(handlers/show-path id)}]
+   [:input.btn.btn-danger
+    {:value "Delete"
+     :type "button"
+     :on-click #(handlers/delete-path id)}]])
 
 (defn path-id-list []
   (sigsub/with-reagent-subs
@@ -57,13 +72,7 @@
     (fn []
       (if-not (= @ids :pending)
         [:ul
-         (map (fn [id]
-                ^{:key id}
-                [:li
-                 {:on-click
-                  #(db/transition (fn [db] (assoc-in db [:page :path-id] id)))}
-                 id])
-              @ids)]))))
+         (map show-path-id @ids)]))))
 
 (defn navbar []
   [:div.navbar.navbar-inverse.navbar-fixed-top
