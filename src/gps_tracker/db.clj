@@ -2,10 +2,11 @@
   (:require [clojure.set :as set]
             [clojure.java.jdbc :as sql]))
 
-(def db-spec {:subprotocol "postgresql"
-              :subname     "//localhost/gpstracker"
-              :user        "admin"
-              :password    "admin"})
+(def db-spec (or (System/getenv "DATABASE_URL")
+                 {:subprotocol "postgresql"
+                  :subname     "//localhost/gpstracker"
+                  :user        "admin"
+                  :password    "admin"}))
 
 (defn create-point-table! []
   (sql/db-do-commands
@@ -57,9 +58,5 @@
 
 (defn clear-points! []
   (sql/delete! db-spec :point []))
-
-(add-path! [{:latitude 44.0 :longitude -70.0}
-            {:latitude 44.0 :longitude -71.0}])
-
 
 
