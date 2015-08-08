@@ -27,6 +27,7 @@
   (db/get-path-ids))
 
 (defn api [actions]
+  (println actions)
   (response/response
     (map api-action actions)))
 

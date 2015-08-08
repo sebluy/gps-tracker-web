@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.28"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [sebluy/sigsub "0.1.1"]
+                 [sebluy/sigsub "0.1.2"]
                  [bidi "1.20.3"]
                  [cljs-ajax "0.3.14"]
                  [environ "1.0.0"]
