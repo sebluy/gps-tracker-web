@@ -3,8 +3,8 @@
 
 (defonce db (atom {}))
 
-(sigsub/register-default-signal-fn
-  (sigsub/get-in-atom-signal-fn db))
+(sigsub/register-default-signal-skeleton
+  (sigsub/get-in-atom-run-fn db))
 
 (defn query
   ([] (sigsub/query nil))
@@ -12,4 +12,5 @@
 
 (defn transition [transition-fn]
   (swap! db #(transition-fn %)))
+
 
