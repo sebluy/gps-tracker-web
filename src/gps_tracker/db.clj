@@ -20,6 +20,9 @@
 (defn add-index-to-point-table! []
   (sql/db-do-commands db-spec "ALTER TABLE point ADD index int"))
 
+(defn add-speed-to-point-table! []
+  (sql/db-do-commands db-spec "ALTER TABLE point ADD speed double precision"))
+
 (defn point->db-point [point]
   (set/rename-keys point {:path-id :path_id}))
 

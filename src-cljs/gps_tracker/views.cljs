@@ -26,7 +26,7 @@
   [:tr
    [:td (point :latitude)]
    [:td (point :longitude)]
-   ])
+   [:td (point :speed)]])
 
 (defn path-table []
   (sigsub/with-reagent-subs
@@ -35,7 +35,7 @@
     (fn []
       (if-not (= @path :pending)
         [:table.table
-         [:thead [:td "Latitude"] [:td "Longitude"]]
+         [:thead [:td "Latitude"] [:td "Longitude"] [:td "Speed (m/s)"]]
          [:tbody
           (doall
             (map-indexed
