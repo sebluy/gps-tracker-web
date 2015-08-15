@@ -12,7 +12,8 @@
 (defn google-map [path]
   (reagent/create-class
     {:reagent-render      map-div
-     :component-did-mount #(map/draw-path path)}))
+     :component-did-mount #(map/draw-path path)
+     :component-will-unmount map/cleanup}))
 
 (defn google-map-slot []
   (sigsub/with-reagent-subs
@@ -22,8 +23,9 @@
       (when (not= @path :pending)
         [google-map @path]))))
 
-(defn show-point [point]
+(defn show-point [index point]
   [:tr
+   {:on-click #(map/toggle-marker point)}
    [:td (point :latitude)]
    [:td (point :longitude)]
    [:td (point :speed)]])
@@ -41,7 +43,7 @@
             (map-indexed
               (fn [index point]
                 ^{:key index}
-                [show-point point])
+                [show-point index point])
               @path))]]))))
 
 (defn show-path []
