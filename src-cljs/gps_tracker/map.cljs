@@ -9,10 +9,10 @@
 (def current-map (atom nil))
 
 (def path-options
-  {:geodesic true
-   :strokeColor "#FF0000"
+  {:geodesic      true
+   :strokeColor   "#FF0000"
    :strokeOpacity 1.0
-   :strokeWeight 2})
+   :strokeWeight  2})
 
 (defn cleanup []
   (reset! markers {})
@@ -28,8 +28,8 @@
 (defn make-google-map [bounds]
   (let [map-options {:center (.getCenter bounds)}
         map (doto (google.maps.Map. (get-canvas) (clj->js map-options))
-               (.fitBounds bounds)
-               (.panToBounds bounds))]
+              (.fitBounds bounds)
+              (.panToBounds bounds))]
     (reset! current-map map)))
 
 (defn point->latlng [point]
@@ -51,10 +51,20 @@
         poly (make-polyline latlngs)]
     (.setMap poly map)))
 
+(defn color [point]
+  (let [accuracy (point :accuracy)
+        redness (if (nil? accuracy)
+                  255
+                  (.round js/Math (min (* accuracy 10.0) 255.0)))]
+    (str "#" (.toString redness 16) "0000")))
+
 (defn add-marker [point]
-  (let [options (clj->js {:position (point->latlng point)})
+  (let [options (clj->js {:position (point->latlng point)
+                          :icon     {:path  google.maps.SymbolPath.CIRCLE
+                                     :strokeColor (color point)
+                                     :scale 10}
+                          :map      @current-map})
         marker (google.maps.Marker. options)]
-    (.setMap marker @current-map)
     (swap! markers assoc point marker)))
 
 (defn remove-marker [point]

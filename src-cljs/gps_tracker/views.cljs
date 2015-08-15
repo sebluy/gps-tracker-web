@@ -28,7 +28,8 @@
    {:on-click #(map/toggle-marker point)}
    [:td (point :latitude)]
    [:td (point :longitude)]
-   [:td (point :speed)]])
+   [:td (point :speed)]
+   [:td (point :accuracy)]])
 
 (defn path-table []
   (sigsub/with-reagent-subs
@@ -37,7 +38,11 @@
     (fn []
       (if-not (= @path :pending)
         [:table.table
-         [:thead [:td "Latitude"] [:td "Longitude"] [:td "Speed (m/s)"]]
+         [:thead
+          [:td "Latitude"]
+          [:td "Longitude"]
+          [:td "Speed (m/s)"]
+          [:td "Accuracy (m)"]]
          [:tbody
           (doall
             (map-indexed
