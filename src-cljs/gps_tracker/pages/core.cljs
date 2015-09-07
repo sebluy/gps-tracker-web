@@ -2,10 +2,12 @@
   (:require [gps-tracker.pages.navbar :as navbar]
             [gps-tracker.pages.paths :as paths]
             [gps-tracker.pages.path :as path]
+            [gps-tracker.pages.waypoint-path :as waypoint-path]
             [sigsub.core :as sigsub :include-macros true]))
 
 (def pages {:paths paths/page
-            :path path/page})
+            :path path/page
+            :waypoint-path waypoint-path/page})
 
 (defn current-page []
   (sigsub/with-reagent-subs

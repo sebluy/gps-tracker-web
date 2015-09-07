@@ -1,12 +1,14 @@
-(ns gps-tracker.map
+(ns gps-tracker.waypoint-map
   (:require [goog.dom :as dom]
             [gps-tracker.db :as db]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [reagent.core :as reagent]
+            [gps-tracker.util :as util]))
 
 (def canvas-id "map-canvas")
 
-(def markers (atom {}))
-(def current-map (atom nil))
+(defn div []
+  [:div#map-canvas])
 
 (def path-options
   {:geodesic      true
@@ -15,8 +17,7 @@
    :strokeWeight  2})
 
 (defn cleanup []
-  (reset! markers {})
-  (reset! current-map nil))
+  (db/transition (fn [db] (dissoc db :map))))
 
 (defn get-canvas []
   (dom/getElement canvas-id))
@@ -30,8 +31,7 @@
         map (doto (google.maps.Map. (get-canvas) (clj->js map-options))
               (.fitBounds bounds)
               (.panToBounds bounds))]
-    (reset! current-map map)))
-
+    (db/transition (fn [db] (assoc-in db [:map :map] map)))))
 
 (defn point->latlng [point]
   (google.maps.LatLng. (point :latitude) (point :longitude)))
@@ -52,6 +52,10 @@
         poly (make-polyline latlngs)]
     (.setMap poly map)))
 
+(defn draw-empty-map []
+  (let [map (google.maps.Map. (get-canvas) (clj->js {:center {:lat 0.0 :lng 0.0} :zoom 1}))]
+    (db/transition (fn [db] (assoc-in db [:map :map] map)))))
+
 (defn color [point]
   (let [accuracy (point :accuracy)
         redness (if (nil? accuracy)
@@ -61,18 +65,32 @@
 
 (defn add-marker [point]
   (let [options (clj->js {:position (point->latlng point)
-                          :icon     {:path  google.maps.SymbolPath.CIRCLE
+                          :icon     {:path        google.maps.SymbolPath.CIRCLE
                                      :strokeColor (color point)
-                                     :scale 10}
-                          :map      @current-map})
+                                     :scale       10}
+                          :map      (db/query [:map :map])})
         marker (google.maps.Marker. options)]
-    (swap! markers assoc point marker)))
+    (db/transition
+      (fn [db] (update-in db [:map :markers] assoc point marker)))))
 
 (defn remove-marker [point]
-  (.setMap (@markers point) nil)
-  (swap! markers dissoc point))
+  (.setMap (db/query [:map :markers point]) nil)
+  (db/transition
+    (fn [db] (util/dissoc-in db [:map :markers point]))))
 
 (defn toggle-marker [point]
-  (if (@markers point)
+  (if (db/query [:map :markers point])
     (remove-marker point)
     (add-marker point)))
+
+(defn google-map [path]
+  (reagent/create-class
+    {:reagent-render         div
+     :component-did-mount    #(draw-path path)
+     :component-will-unmount cleanup}))
+
+(defn empty-google-map []
+  (reagent/create-class
+    {:reagent-render         div
+     :component-did-mount    draw-empty-map
+     :component-will-unmount cleanup}))

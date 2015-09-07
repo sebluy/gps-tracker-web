@@ -2,7 +2,8 @@
   (:require [bidi.bidi :as bidi]))
 
 (def routes ["" {"paths"      :paths
-                 "path" {["/" :id] :path}}])
+                 "path" {["/" :id] :path}
+                 "waypoint-path" :waypoint-path}])
 
 (defn- route->page [route]
   (bidi/match-route routes route))
