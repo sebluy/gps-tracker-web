@@ -1,11 +1,11 @@
 (ns gps-tracker.core
   (:require [reagent.core :as reagent]
             [gps-tracker.subs]
-            [gps-tracker.navigation :as navigation]
-            [gps-tracker.views :as views]))
+            [gps-tracker.pages.core :as pages]
+            [gps-tracker.navigation :as navigation]))
 
 (defn mount-components []
-  (reagent/render-component [views/page] (.getElementById js/document "app")))
+  (reagent/render-component [pages/view] (.getElementById js/document "app")))
 
 (defn init! []
   (navigation/hook-browser)
