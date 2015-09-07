@@ -2,6 +2,12 @@
   (:require [sigsub.core :as sigsub :include-macros :true]
             [gps-tracker.remote :as remote]))
 
+(defn path-id []
+  (sigsub/with-signals
+    [id [:page :route-params :id]]
+    (fn []
+      (js/parseInt @id))))
+
 (defn path-ids []
   (sigsub/with-signals
     [remote-ids [:remote :path-ids]]
@@ -28,3 +34,4 @@
 
 (sigsub/register-signal-skeleton [:path-ids] path-ids dispose-path-ids)
 (sigsub/register-signal-skeleton [:path] path dispose-path)
+(sigsub/register-signal-skeleton [:page :path-id] path-id)

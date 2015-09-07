@@ -4,7 +4,8 @@
             [gps-tracker.map :as map]
             [gps-tracker.handlers :as handlers]
             [sigsub.core :as sigsub :include-macros true]
-            [reagent.core :as reagent]))
+            [reagent.core :as reagent]
+            [gps-tracker.routing :as routing]))
 
 (defn map-div []
     [:div#map-canvas])
@@ -51,6 +52,7 @@
                 [show-point index point])
               @path))]]))))
 
+
 (defn show-path []
   (sigsub/with-reagent-subs
     [path-id [:page :path-id]]
@@ -64,14 +66,15 @@
   ^{:key id}
   [:li
    [:p id]
-   [:input.btn.btn-primary
-    {:value "Show"
-     :type "button"
-     :on-click #(handlers/show-path id)}]
+   [:a.btn.btn-primary
+    {:href (routing/page->href {:handler :path :route-params {:id id}})}
+    "Show"]
    [:input.btn.btn-danger
     {:value "Delete"
      :type "button"
      :on-click #(handlers/delete-path id)}]])
+
+@db/db
 
 (defn path-id-list []
   (sigsub/with-reagent-subs
@@ -85,15 +88,32 @@
   [:div.navbar.navbar-inverse.navbar-fixed-top
    [:div.container
     [:div.navbar-header
-     [:a.navbar-brand "GPS Tracker"]]]])
+     [:a.navbar-brand "GPS Tracker"]]
+    [:ul.nav.navbar-nav
+     [:li [:a {:href (routing/page->href {:handler :paths})} "Paths"]]]]])
+
+(defn paths-page []
+  [:div
+   [:div.page-header
+    [:h1 "Paths"]]
+   [path-id-list]])
+
+(defn path-page []
+  [show-path])
+
+(def pages {:paths paths-page
+            :path path-page})
+
+(defn current-page []
+  (sigsub/with-reagent-subs
+    [handler [:page :handler]]
+    (fn []
+      [(or (pages @handler) :div)])))
 
 (defn page []
   [:div.container
    [:div.row
     [:div.span12
      [navbar]
-     [:div.page-header
-      [:h1 "Paths"]]
-     [path-id-list]
-     [show-path]]]])
+     [current-page]]]])
 

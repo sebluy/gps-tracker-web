@@ -12,7 +12,7 @@
 (defn- initialize-route []
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)
-      (let [page {:handler :activities}]
+      (let [page {:handler :paths}]
         (history/replace-token page)
         (navigate page))
       (navigate (routing/route->page history-token)))))

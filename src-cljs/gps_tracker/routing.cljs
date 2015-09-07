@@ -1,9 +1,8 @@
 (ns gps-tracker.routing
   (:require [bidi.bidi :as bidi]))
 
-(defonce routes ["" {"today"      :today
-                     "activities" {""              :activities
-                                   ["/" :activity] :activity}}])
+(def routes ["" {"paths"      :paths
+                 "path" {["/" :id] :path}}])
 
 (defn- route->page [route]
   (bidi/match-route routes route))

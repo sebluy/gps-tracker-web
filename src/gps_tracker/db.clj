@@ -23,6 +23,11 @@
 (defn add-speed-to-point-table! []
   (sql/db-do-commands db-spec "ALTER TABLE point ADD speed double precision"))
 
+(defn add-accuracy-to-point-table! []
+  (sql/db-do-commands
+    db-spec
+    "ALTER TABLE point ADD accuracy double precision"))
+
 (defn point->db-point [point]
   (set/rename-keys point {:path-id :path_id}))
 
