@@ -20,8 +20,14 @@
 (defmethod api-action :add-path [[_ path]]
   (db/add-path! path))
 
+(defmethod api-action :add-waypoint-path [[_ path]]
+  (db/add-waypoint-path! path))
+
 (defmethod api-action :get-path [[_ path-id]]
   (db/get-path path-id))
+
+(defmethod api-action :get-waypoint-path [[_ path-id]]
+  (db/get-waypoint-path path-id))
 
 (defmethod api-action :get-path-ids [_]
   (db/get-path-ids))

@@ -11,3 +11,6 @@
 (defn show-path [id]
   (db/transition (fn [db] (assoc-in db [:page :path-id] id))))
 
+(defn upload-waypoint-path []
+  (remote/upload-waypoint-path (db/query [:page :waypoint-path])))
+

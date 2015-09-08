@@ -40,3 +40,6 @@
 (defn remove-path [id]
   (db/transition (fn [db] (util/dissoc-in db [:remote :path id]))))
 
+(defn upload-waypoint-path [path]
+  (post-actions [[:add-waypoint-path path]]))
+

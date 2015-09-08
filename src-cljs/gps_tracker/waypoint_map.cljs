@@ -5,6 +5,8 @@
             [reagent.core :as reagent]
             [gps-tracker.util :as util]))
 
+; Todo: this mapping is going to need a major refactoring
+
 (def canvas-id "map-canvas")
 
 (defn div []
@@ -31,10 +33,14 @@
         map (doto (google.maps.Map. (get-canvas) (clj->js map-options))
               (.fitBounds bounds)
               (.panToBounds bounds))]
-    (db/transition (fn [db] (assoc-in db [:map :map] map)))))
+    (db/transition (fn [db] (assoc-in db [:map :map] map)))
+    map))
 
 (defn point->latlng [point]
   (google.maps.LatLng. (point :latitude) (point :longitude)))
+
+(defn latlng->point [latlng]
+  {:latitude (.lat latlng) :longitude (.lng latlng)})
 
 (defn make-bounds [latlngs]
   (let [bounds (google.maps.LatLngBounds.)]
@@ -45,16 +51,27 @@
 (defn path->latlngs [path]
   (map point->latlng path))
 
+(defn add-latlng-to-waypoint-path [latlng]
+  (.push (.getPath (db/query [:map :polyline])) latlng)
+  (google.maps.Marker.
+    (clj->js {:position latlng :map (db/query [:map :map])}))
+  (let [point (latlng->point latlng)]
+    (db/transition
+      (fn [db]
+        (update-in db [:page :waypoint-path] (fn [path]
+                                               (if (nil? path)
+                                                 [point]
+                                                 (conj path point))))))))
+
 (defn draw-path [path]
   (let [latlngs (path->latlngs path)
         bounds (make-bounds latlngs)
         map (make-google-map bounds)
         poly (make-polyline latlngs)]
+    (.addListener map "click"
+                  (fn [event] (add-latlng-to-waypoint-path (.-latLng event))))
+    (db/transition (fn [db] (assoc-in db [:map :polyline] poly)))
     (.setMap poly map)))
-
-(defn draw-empty-map []
-  (let [map (google.maps.Map. (get-canvas) (clj->js {:center {:lat 0.0 :lng 0.0} :zoom 1}))]
-    (db/transition (fn [db] (assoc-in db [:map :map] map)))))
 
 (defn color [point]
   (let [accuracy (point :accuracy)
@@ -83,14 +100,9 @@
     (remove-marker point)
     (add-marker point)))
 
-(defn google-map [path]
+(defn google-map [initial-path]
   (reagent/create-class
     {:reagent-render         div
-     :component-did-mount    #(draw-path path)
+     :component-did-mount    #(draw-path initial-path)
      :component-will-unmount cleanup}))
 
-(defn empty-google-map []
-  (reagent/create-class
-    {:reagent-render         div
-     :component-did-mount    draw-empty-map
-     :component-will-unmount cleanup}))
