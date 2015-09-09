@@ -44,10 +44,26 @@
 (defn dispose-path [[id]]
   (fn [] (remote/remove-path id)))
 
+(defn waypoint-path [[id]]
+  (sigsub/with-signals
+    [path [:remote :waypoint-path id]]
+    (fn []
+      (if @path
+        @path
+        (do (remote/get-waypoint-path id)
+            :pending)))))
+
+(defn dispose-waypoint-path [[id]]
+  (fn [] (remote/remove-waypoint-path id)))
+
 (sigsub/register-signal-skeleton [:path-ids] path-ids dispose-path-ids)
 (sigsub/register-signal-skeleton
   [:waypoint-path-ids]
   waypoint-path-ids
   dispose-waypoint-path-ids)
 (sigsub/register-signal-skeleton [:path] path dispose-path)
+(sigsub/register-signal-skeleton
+  [:waypoint-path]
+  waypoint-path
+  dispose-waypoint-path)
 (sigsub/register-signal-skeleton [:page :path-id] path-id)

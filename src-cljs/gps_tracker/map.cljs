@@ -1,12 +1,11 @@
 (ns gps-tracker.map
   (:require [goog.dom :as dom]
-            [gps-tracker.db :as db]
-            [clojure.set :as set]))
+            [reagent.core :as reagent]))
 
 (def canvas-id "map-canvas")
 
-(def markers (atom {}))
-(def current-map (atom nil))
+(defn div []
+  [:div#map-canvas])
 
 (def path-options
   {:geodesic      true
@@ -14,27 +13,27 @@
    :strokeOpacity 1.0
    :strokeWeight  2})
 
-(defn cleanup []
-  (reset! markers {})
-  (reset! current-map nil))
-
 (defn get-canvas []
   (dom/getElement canvas-id))
+
+(defn draw-marker [map latlng]
+  (google.maps.Marker. (clj->js {:position latlng :map map})))
 
 (defn make-polyline [coordinates]
   (google.maps.Polyline.
     (clj->js (merge {:path coordinates} path-options))))
 
 (defn make-google-map [bounds]
-  (let [map-options {:center (.getCenter bounds)}
-        map (doto (google.maps.Map. (get-canvas) (clj->js map-options))
-              (.fitBounds bounds)
-              (.panToBounds bounds))]
-    (reset! current-map map)))
-
+  (let [map-options {:center (.getCenter bounds)}]
+    (doto (google.maps.Map. (get-canvas) (clj->js map-options))
+      (.fitBounds bounds)
+      (.panToBounds bounds))))
 
 (defn point->latlng [point]
   (google.maps.LatLng. (point :latitude) (point :longitude)))
+
+(defn latlng->point [latlng]
+  {:latitude (.lat latlng) :longitude (.lng latlng)})
 
 (defn make-bounds [latlngs]
   (let [bounds (google.maps.LatLngBounds.)]
@@ -45,34 +44,27 @@
 (defn path->latlngs [path]
   (map point->latlng path))
 
-(defn draw-path [path]
+(defn add-markers [map path]
+  (doseq [point path]
+    (draw-marker map (point->latlng point))))
+
+(defn draw-map-with-path [path]
   (let [latlngs (path->latlngs path)
         bounds (make-bounds latlngs)
         map (make-google-map bounds)
         poly (make-polyline latlngs)]
+    (add-markers map path)
     (.setMap poly map)))
 
-(defn color [point]
-  (let [accuracy (point :accuracy)
-        redness (if (nil? accuracy)
-                  255
-                  (.round js/Math (min (* accuracy 10.0) 255.0)))]
-    (str "#" (.toString redness 16) "0000")))
+(defn viewing-map [path]
+  (reagent/create-class
+    {:reagent-render         div
+     :component-did-mount    #(draw-map-with-path path)}))
 
-(defn add-marker [point]
-  (let [options (clj->js {:position (point->latlng point)
-                          :icon     {:path  google.maps.SymbolPath.CIRCLE
-                                     :strokeColor (color point)
-                                     :scale 10}
-                          :map      @current-map})
-        marker (google.maps.Marker. options)]
-    (swap! markers assoc point marker)))
+#_(defn drawing-map [on-new-point]
+  (reagent/create-class
+    {:reagent-render         div
+     :component-did-mount    #(draw-path initial-path)
+     :component-will-unmount cleanup}))
 
-(defn remove-marker [point]
-  (.setMap (@markers point) nil)
-  (swap! markers dissoc point))
 
-(defn toggle-marker [point]
-  (if (@markers point)
-    (remove-marker point)
-    (add-marker point)))

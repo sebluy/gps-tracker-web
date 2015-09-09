@@ -19,7 +19,6 @@
     (fn []
       [(or (pages @handler) :div)])))
 
-
 (defn view []
   [:div.container
    [:div.row

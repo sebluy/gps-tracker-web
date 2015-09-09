@@ -44,6 +44,17 @@
 (defn remove-path [id]
   (db/transition (fn [db] (util/dissoc-in db [:remote :path id]))))
 
+(defn get-waypoint-path [id]
+  (async/go
+    (db/transition
+      (fn [db] (assoc-in db [:remote :waypoint-path id] :pending)))
+    (let [path (first (async/<! (post-actions [[:get-waypoint-path id]])))]
+      (db/transition
+        (fn [db] (assoc-in db [:remote :waypoint-path id] path))))))
+
+(defn remove-waypoint-path [id]
+  (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-path id]))))
+
 (defn upload-waypoint-path [path]
   (post-actions [[:add-waypoint-path path]]))
 

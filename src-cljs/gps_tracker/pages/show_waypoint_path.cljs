@@ -1,8 +1,13 @@
 (ns gps-tracker.pages.show-waypoint-path
-  (:require [gps-tracker.waypoint-map :as map]
+  (:require [gps-tracker.map :as map]
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.handlers :as handlers]))
 
 (defn page []
-  [:div "Checkout this dope ass waypoint path"])
+  (sigsub/with-reagent-subs
+    [id [:page :path-id]
+     path [:waypoint-path @id]]
+    (fn []
+      (when (not= @path :pending)
+        [map/viewing-map @path]))))
 
