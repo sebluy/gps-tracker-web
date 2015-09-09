@@ -15,13 +15,6 @@
        :response-format :edn})
     response-chan))
 
-(defn delete-path [id]
-  (db/transition
-    (fn [db]
-      (-> db
-          (update-in [:remote :path-ids] (fn [ids] (remove #(= % id) ids))))))
-  (post-actions [[:delete-path id]]))
-
 (defn get-path-ids []
   (async/go
     (db/transition (fn [db] (assoc-in db [:remote :path-ids] :pending)))
@@ -30,6 +23,17 @@
 
 (defn remove-path-ids []
   (db/transition (fn [db] (util/dissoc-in db [:remote :path-ids]))))
+
+(defn get-waypoint-path-ids []
+  (async/go
+    (db/transition
+      (fn [db] (assoc-in db [:remote :waypoint-path-ids] :pending)))
+    (let [ids (first (async/<! (post-actions [[:get-waypoint-path-ids]])))]
+      (db/transition
+        (fn [db] (assoc-in db [:remote :waypoint-path-ids] ids))))))
+
+(defn remove-waypoint-path-ids []
+  (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-path-ids]))))
 
 (defn get-path [id]
   (async/go
@@ -43,3 +47,9 @@
 (defn upload-waypoint-path [path]
   (post-actions [[:add-waypoint-path path]]))
 
+(defn delete-path [id]
+  (db/transition
+    (fn [db]
+      (-> db
+          (update-in [:remote :path-ids] (fn [ids] (remove #(= % id) ids))))))
+  (post-actions [[:delete-path id]]))

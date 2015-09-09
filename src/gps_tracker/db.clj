@@ -76,7 +76,7 @@
 (defn get-waypoint-path-ids []
   (map :path_id (sql/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
 
-(get-waypoint-path-ids)
+(get-waypoint-path 0)
 
 (defn next-path-id []
   (let [ids (get-path-ids)]

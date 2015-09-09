@@ -6,6 +6,8 @@
             [gps-tracker.util :as util]))
 
 ; Todo: this mapping is going to need a major refactoring
+; have a show path map vs a add point map
+; maybe operate map using core async?
 
 (def canvas-id "map-canvas")
 

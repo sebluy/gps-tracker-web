@@ -7,9 +7,10 @@
     [:div.navbar-header
      [:a.navbar-brand "GPS Tracker"]]
     [:ul.nav.navbar-nav
-     [:li [:a {:href (routing/page->href {:handler :paths})} "Paths"]]
+     [:li
+      [:a {:href (routing/page->href {:handler :paths})} "Paths"]]
      [:li
       [:a
-       {:href (routing/page->href {:handler :waypoint-path})}
-       "Waypoint Path"]]]]])
+       {:href (routing/page->href {:handler :waypoint-paths})}
+       "Waypoint Paths"]]]]])
 

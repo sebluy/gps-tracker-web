@@ -1,4 +1,4 @@
-(ns gps-tracker.pages.waypoint-path
+(ns gps-tracker.pages.new-waypoint-path
   (:require [gps-tracker.waypoint-map :as map]
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.handlers :as handlers]))
