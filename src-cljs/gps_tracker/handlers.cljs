@@ -14,3 +14,10 @@
 (defn upload-waypoint-path []
   (remote/upload-waypoint-path (db/query [:page :waypoint-path])))
 
+(defn add-waypoint-to-path [point]
+    (db/transition
+      (fn [db]
+        (update-in db [:page :waypoint-path]
+                   (fn [path]
+                     (if (nil? path) [point] (conj path point)))))))
+

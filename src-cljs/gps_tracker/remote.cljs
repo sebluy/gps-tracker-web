@@ -5,6 +5,8 @@
             [gps-tracker.util :as util])
   (:require-macros [cljs.core.async.macros :as async]))
 
+;Todo: merge "tracking" and "waypoint" paths across platform
+
 (defn post-actions [actions]
   (let [response-chan (async/chan)]
     (ajax/POST

@@ -1,5 +1,6 @@
 (ns gps-tracker.map
   (:require [goog.dom :as dom]
+            [gps-tracker.handlers :as handlers]
             [reagent.core :as reagent]))
 
 (def canvas-id "map-canvas")
@@ -23,11 +24,15 @@
   (google.maps.Polyline.
     (clj->js (merge {:path coordinates} path-options))))
 
-(defn make-google-map [bounds]
-  (let [map-options {:center (.getCenter bounds)}]
-    (doto (google.maps.Map. (get-canvas) (clj->js map-options))
-      (.fitBounds bounds)
-      (.panToBounds bounds))))
+(defn make-google-map [center]
+  (google.maps.Map. (get-canvas) (clj->js {:center center
+                                           :zoom 1
+                                           :mapTypeId google.maps.MapTypeId.HYBRID})))
+
+(defn make-bounded-google-map [bounds]
+  (doto (make-google-map (.getCenter bounds))
+    (.fitBounds bounds)
+    (.panToBounds bounds)))
 
 (defn point->latlng [point]
   (google.maps.LatLng. (point :latitude) (point :longitude)))
@@ -51,20 +56,34 @@
 (defn draw-map-with-path [path]
   (let [latlngs (path->latlngs path)
         bounds (make-bounds latlngs)
-        map (make-google-map bounds)
+        map (make-bounded-google-map bounds)
         poly (make-polyline latlngs)]
     (add-markers map path)
     (.setMap poly map)))
 
 (defn viewing-map [path]
   (reagent/create-class
-    {:reagent-render         div
-     :component-did-mount    #(draw-map-with-path path)}))
+    {:reagent-render      div
+     :component-did-mount #(draw-map-with-path path)}))
 
-#_(defn drawing-map [on-new-point]
+(defn add-latlng-to-waypoint-path [map polyline latlng]
+  (.push (.getPath polyline) latlng)
+  (google.maps.Marker. (clj->js {:position latlng :map map}))
+  (handlers/add-waypoint-to-path (latlng->point latlng)))
+
+(defn draw-waypoint-creation-map []
+  (let [map (make-google-map (point->latlng {:latitude 0.0 :longtiude 0.0}))
+        polyline (make-polyline [])]
+    (.setMap polyline map)
+    (.addListener map "click"
+                  (fn [event]
+                    (add-latlng-to-waypoint-path
+                      map
+                      polyline
+                      (.-latLng event))))))
+
+(defn waypoint-creation-map []
   (reagent/create-class
-    {:reagent-render         div
-     :component-did-mount    #(draw-path initial-path)
-     :component-will-unmount cleanup}))
-
+    {:reagent-render      div
+     :component-did-mount draw-waypoint-creation-map}))
 

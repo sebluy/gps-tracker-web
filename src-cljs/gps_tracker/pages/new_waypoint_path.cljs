@@ -1,5 +1,5 @@
 (ns gps-tracker.pages.new-waypoint-path
-  (:require [gps-tracker.waypoint-map :as map]
+  (:require [gps-tracker.map :as map]
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.handlers :as handlers]))
 
@@ -30,14 +30,12 @@
     :on-click handlers/upload-waypoint-path}])
 
 (defn page []
-  (sigsub/with-reagent-subs
-    [path [:page :waypoint-path]]
-    (fn []
-      [:div
-       [:div.page-header
-        [:h1 "New Waypoint"
-         [:p.pull-right.btn-toolbar
-          [upload-button]]]]
-       [:div.col-md-6 [path-table]]
-       [:div.col-md-6 [map/google-map @path]]])))
+  [:div
+   [:div.page-header
+    [:h1 "New Waypoint"
+     [:p.pull-right.btn-toolbar
+      [upload-button]]]]
+   [:div.col-md-6 [path-table]]
+   [:div.col-md-6 [map/waypoint-creation-map]]])
+
 

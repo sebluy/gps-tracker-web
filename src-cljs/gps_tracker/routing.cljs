@@ -4,7 +4,7 @@
 (def routes ["" {"paths"          :paths
                  "path/"          {[:id] :path}
                  "waypoint-paths" :waypoint-paths
-                 "waypoint-path/" {"new" :new-waypoint-path
+                 "waypoint-path/" {"new"         :new-waypoint-path
                                    ["show/" :id] :show-waypoint-path}}])
 
 (defn- route->page [route]
