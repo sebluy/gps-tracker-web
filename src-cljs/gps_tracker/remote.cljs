@@ -8,7 +8,6 @@
 ;Todo: merge "tracking" and "waypoint" paths across platform
 
 (defn post-actions [actions response-chan]
-  (println "Posting: " actions)
   (ajax/POST
     "/api"
     {:params          actions
@@ -97,15 +96,8 @@
   (post-action [:add-waypoint-path path]))
 
 (defn delete-path [id]
-  (db/transition
-    (fn [db]
-      (-> db
-          (update-in [:remote :path-ids] (fn [ids] (remove #(= % id) ids))))))
   (post-action [:delete-path id]))
 
-; Todo: move delete buttons to more appropiate place and fix bug with
-; delete -> get
-; hazardous bug
 (defn delete-waypoint-path [id]
   (post-action [:delete-waypoint-path id]))
 
