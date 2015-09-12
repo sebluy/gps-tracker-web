@@ -9,6 +9,10 @@
 (defn navigate [page]
   (db/transition (fn [db] (assoc db :page page))))
 
+(defn redirect [page]
+  (navigate page)
+  (history/replace-token page))
+
 (defn- initialize-route []
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)

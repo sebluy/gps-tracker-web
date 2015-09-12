@@ -6,14 +6,9 @@
 (defn show [id]
   ^{:key id}
   [:li
-   [:p id]
    [:a.btn.btn-primary
     {:href (routing/page->href {:handler :show-waypoint-path :route-params {:id id}})}
-    "Show"]
-   #_[:input.btn.btn-danger
-    {:value "Delete"
-     :type "button"
-     :on-click #(handlers/delete-waypoint-path id)}]])
+    id]])
 
 (defn waypoint-list []
   (sigsub/with-reagent-subs

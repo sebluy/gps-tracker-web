@@ -76,8 +76,6 @@
 (defn get-waypoint-path-ids []
   (map :path_id (sql/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
 
-(get-waypoint-path 0)
-
 (defn next-path-id []
   (let [ids (get-path-ids)]
     (if (seq ids)
@@ -106,6 +104,9 @@
 
 (defn delete-path! [path-id]
   (sql/delete! db-spec :point ["path_id = ?" path-id]))
+
+(defn delete-waypoint-path! [path-id]
+  (sql/delete! db-spec :waypoint ["path_id = ?" path-id]))
 
 (defn clear-points! []
   (sql/delete! db-spec :point []))

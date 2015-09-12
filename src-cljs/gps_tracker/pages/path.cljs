@@ -1,7 +1,8 @@
 (ns gps-tracker.pages.path
   (:require [gps-tracker.map :as map]
             [sigsub.core :as sigsub :include-macros true]
-            [reagent.core :as reagent]))
+            [reagent.core :as reagent]
+            [gps-tracker.handlers :as handlers]))
 
 (defn map-slot []
   (sigsub/with-reagent-subs
@@ -38,12 +39,22 @@
                 [show-point index point])
               @path))]]))))
 
+(defn delete-button [id]
+  [:input.btn.btn-danger
+   {:value "Delete"
+    :type "button"
+    :on-click #(handlers/delete-path id)}])
+
 (defn page []
   (sigsub/with-reagent-subs
-    [path-id [:page :path-id]]
+    [id [:page :path-id]]
     (fn []
-      (when @path-id
+      (when @id
         [:div
+         [:div.page-header
+          [:h1 (str "Path " @id)
+           [:p.pull-right.btn-toolbar
+            [delete-button @id]]]]
          [:div.col-md-6 [path-table]]
          [:div.col-md-6 [map-slot]]]))))
 

@@ -7,6 +7,8 @@
             [gps-tracker.pages.show-waypoint-path :as show-waypoint-path]
             [sigsub.core :as sigsub :include-macros true]))
 
+;Todo: reorganize pages more restful like rails
+
 (def pages {:paths paths/page
             :path path/page
             :waypoint-paths waypoint-paths/page

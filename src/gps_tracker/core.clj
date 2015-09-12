@@ -17,6 +17,9 @@
 (defmethod api-action :delete-path [[_ path-id]]
   (db/delete-path! path-id))
 
+(defmethod api-action :delete-waypoint-path [[_ path-id]]
+  (db/delete-waypoint-path! path-id))
+
 (defmethod api-action :add-path [[_ path]]
   (db/add-path! path))
 

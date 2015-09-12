@@ -6,14 +6,9 @@
 (defn show-path-id [id]
   ^{:key id}
   [:li
-   [:p id]
    [:a.btn.btn-primary
     {:href (routing/page->href {:handler :path :route-params {:id id}})}
-    "Show"]
-   [:input.btn.btn-danger
-    {:value "Delete"
-     :type "button"
-     :on-click #(handlers/delete-path id)}]])
+    id]])
 
 (defn path-id-list []
   (sigsub/with-reagent-subs
