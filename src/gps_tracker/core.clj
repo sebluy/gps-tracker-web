@@ -35,6 +35,9 @@
 (defmethod api-action :get-path-ids [_]
   (db/get-path-ids))
 
+(defmethod api-action :get-waypoint-paths [_]
+  (db/get-waypoint-paths))
+
 (defmethod api-action :get-waypoint-path-ids [_]
   (db/get-waypoint-path-ids))
 
