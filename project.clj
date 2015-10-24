@@ -19,7 +19,9 @@
                  [ring-middleware-format "0.5.0"]
                  [ring/ring-devel "1.4.0"]
                  [yesql "0.4.2"]
-                 [org.postgresql/postgresql "9.3-1103-jdbc41"]]
+                 [org.postgresql/postgresql "9.3-1103-jdbc41"]
+                 [prismatic/schema "1.0.1"]
+                 [sebluy/gps-tracker-common "0.1.0"]]
 
   :min-lein-version "2.0.0"
   :uberjar-name "gps-tracker.jar"

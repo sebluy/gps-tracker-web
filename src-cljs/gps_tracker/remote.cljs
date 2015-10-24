@@ -100,4 +100,3 @@
 
 (defn delete-waypoint-path [id]
   (post-action [:delete-waypoint-path id]))
-
