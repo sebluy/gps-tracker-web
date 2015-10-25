@@ -67,21 +67,22 @@
   (let [raw (jdbc/query
               *txn*
               ["SELECT * FROM waypoint
-              WHERE path_id = ?
-              ORDER BY index ASC" id])]
+                WHERE path_id = ?
+                ORDER BY index ASC" id])]
     (into [] (map #(dissoc % :path_id :index) raw))))
 
-(defn get-path-ids []
-  (map :path_id (jdbc/query db-spec ["SELECT DISTINCT path_id FROM point"])))
+(defn get-tracking-path-ids []
+  (map #(-> % :path_id sql->date) (jdbc/query *txn* ["SELECT DISTINCT path_id
+                                                      FROM tracking_point
+                                                      ORDER BY path_id DESC"])))
 
 (defn get-waypoint-path-ids []
-  (map :path_id (jdbc/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
+  (map #(-> :path_id sql->date) (jdbc/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
 
 (defn get-waypoint-paths []
   (reduce
     (fn [paths id] (assoc paths id (get-waypoint-path id)))
     {} (get-waypoint-path-ids)))
-
 
 ;;;; tracking paths
 
@@ -125,8 +126,8 @@
                (add-waypoint! (update point :path-id path-id :index index)))
              path))))
 
-(defn delete-path! [path-id]
-  (jdbc/delete! db-spec :point ["path_id = ?" path-id]))
+(defn delete-tracking-path! [id]
+  (jdbc/delete! *txn* :tracking_point ["path_id = ?" (date->sql id)]))
 
 (defn delete-waypoint-path! [path-id]
   (jdbc/delete! db-spec :waypoint ["path_id = ?" path-id]))
@@ -136,6 +137,8 @@
 
 ;;;; api actions
 
+;; todo: add schema declarations and validations for api-actions
+;; if multi methods worked with schema, this would be redundant
 (defmulti api-action (comp keyword first))
 
 (defmethod api-action :add-tracking-path [[_ path]]
@@ -144,7 +147,12 @@
 (defmethod api-action :get-tracking-path [[_ id]]
   (get-tracking-path id))
 
-; todo: add schema declarations and validations for api-actions
+(defmethod api-action :get-tracking-path-ids [_]
+  (get-tracking-path-ids))
+
+(defmethod api-action :delete-tracking-path [[_ id]]
+  (delete-tracking-path! id))
+
 (defn execute-api-actions [actions]
   "Executes all actions in a transaction and returns results in a list"
   (jdbc/with-db-transaction
