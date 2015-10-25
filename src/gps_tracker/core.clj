@@ -12,43 +12,11 @@
             [compojure.route :as route])
   (:gen-class))
 
-(defmulti api-action (comp keyword first))
-
-(defmethod api-action :delete-path [[_ path-id]]
-  (db/delete-path! path-id))
-
-(defmethod api-action :delete-waypoint-path [[_ path-id]]
-  (db/delete-waypoint-path! path-id))
-
-(defmethod api-action :add-path [[_ path]]
-  (db/add-path! path))
-
-(defmethod api-action :add-waypoint-path [[_ path]]
-  (db/add-waypoint-path! path))
-
-(defmethod api-action :get-path [[_ path-id]]
-  (db/get-path path-id))
-
-(defmethod api-action :get-waypoint-path [[_ path-id]]
-  (db/get-waypoint-path path-id))
-
-(defmethod api-action :get-path-ids [_]
-  (db/get-path-ids))
-
-(defmethod api-action :get-waypoint-paths [_]
-  (db/get-waypoint-paths))
-
-(defmethod api-action :get-waypoint-path-ids [_]
-  (db/get-waypoint-path-ids))
-
-(defn api [actions]
-  (response/response
-    (map api-action actions)))
-
 (compojure/defroutes
   routes
   (route/resources "/")
-  (compojure/ANY "/api" {actions :body-params} (api actions))
+  (compojure/ANY "/api" {actions :body-params}
+                 (response/response (db/execute-api-actions actions)))
   (compojure/GET "/" [] (hiccup/html (page/page))))
 
 (defn parse-port [port]

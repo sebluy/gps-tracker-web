@@ -1,100 +1,122 @@
 (ns gps-tracker.db
   (:require [clojure.set :as set]
-            [clojure.java.jdbc :as sql]
+            [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
-            [gps-tracker-common.schema :as gps-schema])
-  (:import [gps_tracker_common.schema]
-           [java.sql Timestamp]))
+            [gps-tracker-common.schema :as t])
+  (:import [java.sql Timestamp]
+           [java.util Date]))
 
 ;Todo: refactor waypoint and path code together
 
 (def db-spec (or (System/getenv "DATABASE_URL")
-                 {:subprotocol "postgresql"
-                  :subname     "//localhost/gpstracker"
+                 {:subprotocol "postgresql" :subname     "//localhost/gpstracker"
                   :user        "dev"
                   :password    "dev"}))
 
-(defn sql-datetime [datetime]
-  (Timestamp. (.getTime datetime)))
+;;;; maybe instead of using dynamic transaction, build (monad?) string of
+;;;; functions that are later threaded with transaction
+(declare ^:dynamic *txn*)
 
-;(sql-datetime (java.util.Date.))
+(defn date->sql [date]
+  (Timestamp. (.getTime date)))
+
+(defn sql->date [date]
+  (Date. (.getTime date)))
 
 (defn create-point-table! []
-  (sql/db-do-commands
-    db-spec
-    (sql/create-table-ddl
-      :tracking_point
-      [:index :int]
-      [:latitude "double precision"]
-      [:longitude "double precision"]
-      [:speed "double precision"]
-      [:accuracy "double precision"]
-      [:time "timestamp with time zone"]
-      [:path_id "timestamp with time zone"])))
+  (jdbc/db-do-commands
+   *txn*
+   (jdbc/create-table-ddl
+    :tracking_point
+    [:index :int]
+    [:latitude "double precision"]
+    [:longitude "double precision"]
+    [:speed "double precision"]
+    [:accuracy "double precision"]
+    [:time "timestamp with time zone"]
+    [:path_id "timestamp with time zone"])))
 
 (defn create-waypoint-table! []
-  (sql/db-do-commands
-    db-spec
-    (sql/create-table-ddl
-      :waypoint
-      [:index :int]
-      [:latitude "double precision"]
-      [:longitude "double precision"]
-      [:path_id "timestamp with time zone"])))
+  (jdbc/db-do-commands
+   *txn*
+   (jdbc/create-table-ddl
+    :waypoint
+    [:index :int]
+    [:latitude "double precision"]
+    [:longitude "double precision"]
+    [:path_id "timestamp with time zone"])))
 
-(defn add-waypoint! [point]
-  (sql/insert! db-spec :waypoint (point->db-point point)))
+#_(defn add-waypoint! [point]
+  (jdbc/insert! db-spec :waypoint (point->db-point point)))
 
-(defn get-points []
-  (sql/query db-spec ["SELECT * FROM tracking_point"]))
+(defn get-tracking-points []
+  (jdbc/query *txn* ["SELECT * FROM tracking_point"]))
 
-(defn get-path [id]
-  (let [raw (sql/query
-              db-spec
-              ["SELECT * FROM point
+;;;; get tracking paths
+
+(s/defn get-tracking-path [id :- t/Date] :- t/TrackingPath
+  (let [raw (jdbc/query
+              *txn*
+              ["SELECT * FROM tracking_point
               WHERE path_id = ?
-              ORDER BY index ASC" id])]
-    (into [] (map #(dissoc % :path_id :index) raw))))
+              ORDER BY index ASC" (date->sql id)])
+        points (into [] (map sql->tracking-point raw))]
+    {:id id :points points}))
 
 (defn get-waypoint-path [id]
-  (let [raw (sql/query
-              db-spec
+  (let [raw (jdbc/query
+              *txn*
               ["SELECT * FROM waypoint
               WHERE path_id = ?
               ORDER BY index ASC" id])]
     (into [] (map #(dissoc % :path_id :index) raw))))
 
 (defn get-path-ids []
-  (map :path_id (sql/query db-spec ["SELECT DISTINCT path_id FROM point"])))
+  (map :path_id (jdbc/query db-spec ["SELECT DISTINCT path_id FROM point"])))
 
 (defn get-waypoint-path-ids []
-  (map :path_id (sql/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
+  (map :path_id (jdbc/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
 
 (defn get-waypoint-paths []
   (reduce
     (fn [paths id] (assoc paths id (get-waypoint-path id)))
     {} (get-waypoint-path-ids)))
 
-;;;; add tracking points
 
-(defn tracking-point->db [point]
-  "Change key :path-id to :path_id and convert all
-   java.util.Dates to java.sql.Timestamp. Point has keys
-   [:latitude :longitude :time :speed :accuracy :path-id :index]"
+;;;; tracking paths
+
+(s/defn tracking-point->sql [point :- t/TrackingPoint path-id index]
   (-> point
-      (dissoc :path-id)
-      (update :time sql-datetime)
-      (assoc :path_id (sql-datetime (point :path-id)))))
+      (assoc :path_id (date->sql path-id) :index index)
+      (update :time date->sql)))
 
-(defn add-tracking-point! [point]
-  "Point is TrackingPoint + extra keys [:path-id :index]"
-  (sql/insert! db-spec :tracking_point (tracking-point->db point)))
+(s/defn sql->tracking-point [point] :- t/TrackingPoint
+  (-> point
+      (dissoc :path_id :index)
+      (update :time sql->date)))
 
-(s/defn add-tracking-path! [{:keys [id points]} :- TrackingPath]
-  (doall (map-indexed
-          (fn [index point]
-            (add-point! (assoc point :path-id id :index index)))
-          points)))
+(s/defn tracking-path->sql [{:keys [id points]} :- t/TrackingPath]
+  (map-indexed
+   (fn [index point]
+     (tracking-point->sql point id index))
+   points))
+
+(s/defn sql->tracking-path [points id] :- t/TrackingPath
+  {:id id
+   :points (into [] (map sql->tracking-point points))})
+
+(s/defn get-tracking-path [id :- t/Date] :- t/TrackingPath
+  (-> (jdbc/query
+       *txn*
+       ["SELECT * FROM tracking_point
+        WHERE path_id = ?
+        ORDER BY index ASC" (date->sql id)])
+      (sql->tracking-path id)))
+
+(s/defn add-tracking-path! [path :- t/TrackingPath]
+  (apply jdbc/insert! *txn* :tracking_point (tracking-path->sql path)))
+
+;;;; add waypoint paths
 
 #_(s/defn add-waypoint-path! [path]
   (let [path-id (next-waypoint-path-id)]
@@ -104,10 +126,28 @@
              path))))
 
 (defn delete-path! [path-id]
-  (sql/delete! db-spec :point ["path_id = ?" path-id]))
+  (jdbc/delete! db-spec :point ["path_id = ?" path-id]))
 
 (defn delete-waypoint-path! [path-id]
-  (sql/delete! db-spec :waypoint ["path_id = ?" path-id]))
+  (jdbc/delete! db-spec :waypoint ["path_id = ?" path-id]))
 
-(defn clear-points! []
-  (sql/delete! db-spec :point []))
+(defn clear-tracking-points! []
+  (jdbc/delete! db-spec :tracking_point []))
+
+;;;; api actions
+
+(defmulti api-action (comp keyword first))
+
+(defmethod api-action :add-tracking-path [[_ path]]
+  (add-tracking-path! path))
+
+(defmethod api-action :get-tracking-path [[_ id]]
+  (get-tracking-path id))
+
+; todo: add schema declarations and validations for api-actions
+(defn execute-api-actions [actions]
+  "Executes all actions in a transaction and returns results in a list"
+  (jdbc/with-db-transaction
+    [transaction db-spec]
+    (binding [*txn* transaction]
+      (map api-action actions))))

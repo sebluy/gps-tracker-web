@@ -1,6 +1,10 @@
 (ns gps-tracker.core-test
   (:require [clojure.test :as t]
-             [gps-tracker.db :as db]))
+            [schema.test :as st]
+            [gps-tracker.db :as db]
+            [clojure.java.jdbc :as jdbc]))
+
+;;;; helpers
 
 (def test-db-spec
   {:subprotocol "postgresql"
@@ -8,31 +12,26 @@
    :user        "dev"
    :password    "dev"})
 
-(defmacro using-test-db [& body]
-  `(with-redefs [db/db-spec test-db-spec]
-     (jdbc/with-db-transaction [transaction url]
-       (jdbc/db-set-rollback-only! transaction)
-       ~@body)))
+;; todo: make sure tables are setup in test_db
+;; use migration library or write your own
 
-(s/defrecord TrackingPoint
-    [latitude :- s/Num
-     longitude :- s/Num
-     time :- Date
-     speed :- (s/Maybe s/Num)
-     accuracy :- (s/Maybe s/Num)])
+(defn with-test-db [f]
+  (jdbc/with-db-transaction
+    [transaction test-db-spec]
+    (jdbc/db-set-rollback-only! transaction)
+    (binding [db/*txn* transaction]
+      (f))))
 
-;;;; Paths
+(t/use-fixtures :once st/validate-schemas)
+(t/use-fixtures :each with-test-db)
 
-(s/defrecord TrackingPath
-    [id :- Date
-     points :- [TrackingPoint]])
+;;;; tests
 
-(t/deftest "add/get tracking paths"
-  (using-test-db
-   (let [date (java.util.Date. 1000)
-         path {:id date
-               :points
-               [{:latitude 1.0 :longitude 2.0 :time date :speed 1.4 :accuracy nil}]}]
-     (api-action
-      [[:add-tracking-path path]])
-     (is (= (api-action [[:get-tracking-path date]]))))))
+(t/deftest add-get-tracking-paths
+  (let [date (java.util.Date. 1000)
+        path {:id date
+              :points [{:latitude 1.0 :longitude 2.0 :time date :accuracy 2.0}]}]
+    (db/api-action [:add-tracking-path path])
+    (t/is (= (db/api-action [:get-tracking-path date])))))
+
+(t/run-tests)
