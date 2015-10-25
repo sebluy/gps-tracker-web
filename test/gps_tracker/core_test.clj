@@ -39,32 +39,28 @@
    :points
    (into []
          (for [i (range n)]
-           {:latitude n :longitude (- n) :time (add-mins time (+ n i))}))})
+           {:latitude (double n) :longitude (double (- n)) :time (add-mins time (+ n i))}))})
+
+;; generates n tracking paths in order of most recent first
+(defn generate-tracking-paths [n]
+  (let [base-date (Date.)]
+    (into []
+          (for [i (reverse (range 1 (+ n 1)))]
+            (generate-tracking-path i base-date)))))
 
 ;;;; tests
 
 (t/deftest add-get-tracking-paths
-  (let [path (generate-tracking-path 4 (Date.))]
-    (db/api-action [:add-tracking-path path])
-    (t/is (= (db/api-action [:get-tracking-path (path :id)])))))
-
-;; dependent on add tracking path working
-;; path ids should be in order of most recent first
-(t/deftest get-tracking-path-ids
-  (let [date (Date.)
-        paths (for [i (range 1 4)] (generate-tracking-path i date))]
+  (let [paths (generate-tracking-paths 4)]
     (doseq [path paths]
       (db/api-action [:add-tracking-path path]))
-    (let [ids (db/api-action [:get-tracking-path-ids])]
-      (t/is (= ids (reverse (map :id paths)))))))
+    (t/is (= paths (db/api-action [:get-tracking-paths])))))
 
-;; dependent on add tracking path and get path ids working
-(t/deftest remove-tracking-paths
-  (let [date (Date.)
-        paths (for [i (range 1 3)] (generate-tracking-path i date))]
+(t/deftest delete-tracking-paths
+  (let [paths (generate-tracking-paths 4)
+        removed-id (-> paths (nth 2) :id)]
     (doseq [path paths]
       (db/api-action [:add-tracking-path path]))
-    (db/api-action [:delete-tracking-path (-> paths first :id)])
-    (t/is (= (list (-> paths second :id)) (db/api-action [:get-tracking-path-ids])))))
-
-(t/run-tests)
+    (db/api-action [:delete-tracking-path removed-id])
+    (t/is (= (filterv #(not= (% :id) removed-id) paths)
+             (db/api-action [:get-tracking-paths])))))
