@@ -34,33 +34,62 @@
 
 ;; simple path generator
 ;; maybe replace with test.check or schema.generator
-(defn generate-tracking-path [n time]
+
+(defn generate-common-point [n]
+  {:latitude (double n)
+   :longitude (double (- n))})
+
+(defmulti generate-point (fn [type _ _ _ _] type))
+
+(defmethod generate-point :tracking [_ n i time]
+  (-> (generate-common-point n)
+      (assoc :time (add-mins time (+ n i)))))
+
+(defmethod generate-point :waypoint [_ n _ _]
+  (generate-common-point n))
+
+(defn generate-path [type n time]
   {:id (add-mins time n)
-   :points
-   (into []
-         (for [i (range n)]
-           {:latitude (double n) :longitude (double (- n)) :time (add-mins time (+ n i))}))})
+   :points (into [] (for [i (range n)] (generate-point type n i time)))})
 
 ;; generates n tracking paths in order of most recent first
-(defn generate-tracking-paths [n]
+(defn generate-paths [type n]
   (let [base-date (Date.)]
     (into []
           (for [i (reverse (range 1 (+ n 1)))]
-            (generate-tracking-path i base-date)))))
+            (generate-path type i base-date)))))
 
 ;;;; tests
 
-(t/deftest add-get-tracking-paths
-  (let [paths (generate-tracking-paths 4)]
+(defn test-add-get-paths [type]
+  "Generate 4 paths, add them to db, then read them out
+   and assert equality"
+  (let [paths (generate-paths type 4)]
     (doseq [path paths]
-      (db/api-action [:add-tracking-path path]))
-    (t/is (= paths (db/api-action [:get-tracking-paths])))))
+      (db/api-action [:add-path type path]))
+    (t/is (= paths (db/api-action [:get-paths type])))))
 
-(t/deftest delete-tracking-paths
-  (let [paths (generate-tracking-paths 4)
+(defn test-delete-paths [type]
+  "Generate 4 paths, add them to db, delete one of them, then read
+   them out and assert they are the same minus one"
+  (let [paths (generate-paths type 4)
         removed-id (-> paths (nth 2) :id)]
     (doseq [path paths]
-      (db/api-action [:add-tracking-path path]))
-    (db/api-action [:delete-tracking-path removed-id])
+      (db/api-action [:add-path type path]))
+    (db/api-action [:delete-path type removed-id])
     (t/is (= (filterv #(not= (% :id) removed-id) paths)
-             (db/api-action [:get-tracking-paths])))))
+             (db/api-action [:get-paths type])))))
+
+(t/deftest add-get-tracking-paths
+  (test-add-get-paths :tracking))
+
+(t/deftest add-get-waypoint-paths
+  (test-add-get-paths :waypoint))
+
+(t/deftest delete-tracking-paths
+  (test-delete-paths :tracking))
+
+(t/deftest delete-waypoint-paths
+  (test-delete-paths :waypoint))
+
+#_(t/run-tests)

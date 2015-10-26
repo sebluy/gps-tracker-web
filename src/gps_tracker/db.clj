@@ -18,11 +18,6 @@
 ;;;; functions that are later threaded with transaction
 (declare ^:dynamic *txn*)
 
-;; useful for debugging
-
-(defn clear-tracking-points! []
-  (jdbc/delete! db-spec :tracking_point []))
-
 ;; date conversions
 
 (defn date->sql [date]
@@ -56,83 +51,104 @@
     [:longitude "double precision"]
     [:path_id "timestamp with time zone"])))
 
-;;;; waypoint paths
+(def tables {:tracking :tracking_point
+             :waypoint :waypoint})
 
-#_(defn add-waypoint! [point]
-  (jdbc/insert! db-spec :waypoint (point->db-point point)))
+;;;; path coercion
 
-#_(defn get-waypoint-path [id]
-  (let [raw (jdbc/query
-              *txn*
-              ["SELECT * FROM waypoint
-                WHERE path_id = ?
-                ORDER BY index ASC" id])]
-    (into [] (map #(dissoc % :path_id :index) raw))))
-
-#_(defn get-waypoint-path-ids []
-  (map #(-> :path_id sql->date) (jdbc/query db-spec ["SELECT DISTINCT path_id FROM waypoint"])))
-
-#_(defn get-waypoint-paths []
-  (reduce
-    (fn [paths id] (assoc paths id (get-waypoint-path id)))
-    {} (get-waypoint-path-ids)))
-
-#_(s/defn add-waypoint-path! [path]
-  (let [path-id (next-waypoint-path-id)]
-    (doall (map-indexed
-             (fn [index point]
-               (add-waypoint! (update point :path-id path-id :index index)))
-             path))))
-
-#_(defn delete-waypoint-path! [path-id]
-  (jdbc/delete! db-spec :waypoint ["path_id = ?" path-id]))
-
-;;;; tracking paths
-
-(s/defn tracking-point->sql [point :- t/TrackingPoint path-id index]
-  (-> point
-      (assoc :path_id (date->sql path-id) :index index)
-      (update :time date->sql)))
-
-(s/defn sql->tracking-point [point] :- t/TrackingPoint
-  (-> point
-      (dissoc :path_id :index)
-      (->> (filter second)
-           (into {}))
-      (update :time sql->date)))
-
-(s/defn tracking-path->sql [{:keys [id points]} :- t/TrackingPath]
+(defn path->sql [type {:keys [id points]}]
+  "Converts a path to the equivalent sql point rows representation
+   using point->sql to convert each point in path"
   (map-indexed
    (fn [index point]
-     (tracking-point->sql point id index))
+     (point->sql type point id index))
    points))
 
-(s/defn sql->tracking-path [[id points]] :- t/TrackingPath
+(defn sql->path [type [id points]]
+  "Converts the sql point rows representation to a path using
+   sql->point to convert each row"
   {:id (sql->date id)
-   :points (into [] (map sql->tracking-point points))})
+   :points (mapv #(sql->point type %) points)})
 
-(defn get-tracking-points []
-  (jdbc/query *txn* ["SELECT * FROM tracking_point
-                      ORDER BY path_id DESC, index ASC"]))
+;;;; point coercion
 
-(s/defn sql->tracking-paths [points] :- [t/TrackingPath]
-  (->> (group-by :path_id (get-tracking-points))
-       (mapv sql->tracking-path)))
+;; to sql
+(defmulti typed-point->sql (fn [type _] type))
 
+(defmethod typed-point->sql :tracking [_ point]
+  (update point :time date->sql))
+
+(defmethod typed-point->sql :waypoint [_ point]
+  point)
+
+(defn common-point->sql [point path-id index]
+  (assoc point :path_id (date->sql path-id) :index index))
+
+(defn point->sql [type point path-id index]
+  "Convert a point to a sql row. First apply common point transformation
+   and then apply type specific transformation"
+  (->> (common-point->sql point path-id index)
+       (typed-point->sql type)))
+
+;; from sql
+(defmulti sql->typed-point (fn [type _] type))
+
+(defn remove-nils [map]
+  (->> (filter second map)
+       (into {})))
+
+(defmethod sql->typed-point :tracking [_ point]
+  (-> (remove-nils point)
+      (update :time sql->date)))
+
+(defmethod sql->typed-point :waypoint [_ point]
+  point)
+
+(defn sql->common-point [point]
+  (dissoc point :path_id :index))
+
+(defn sql->point [type point]
+  "Convert a sql row to a point. Does the 'reverse' of point->sql"
+  (->> (sql->common-point point)
+       (sql->typed-point type)))
+
+;; alias waypoint coercion because it is the same as generic point coercion
+(def sql->waypoint sql->point)
+(def waypoint->sql point->sql)
+
+(defn sql->paths [type points]
+  (->> (group-by :path_id points)
+       (mapv #(sql->path type %))))
+
+;;;; db operations
+
+(defn get-points [table]
+  (jdbc/query *txn*
+              [(str "SELECT * FROM " (name table)
+                    " ORDER BY path_id DESC, index ASC")]))
+
+(defn insert-points [table sql-points]
+  (apply jdbc/insert! *txn* table sql-points))
+
+(defn delete-points [table id]
+  (jdbc/delete! *txn* table ["path_id = ?" (date->sql id)]))
 
 ;;;; api actions
 
 (defmulti api-action (comp keyword first))
 
-(s/defmethod api-action :add-tracking-path [[_ path] :- t/AddTrackingPath]
-  (apply jdbc/insert! *txn* :tracking_point (tracking-path->sql path))
+;; tracking paths
+(s/defmethod api-action :add-path [[_ type path] :- t/AddPath]
+  (insert-points (tables type) (path->sql type path))
   nil)
 
-(s/defmethod api-action :get-tracking-paths :- [t/TrackingPath] [_ :- t/GetTrackingPaths]
-  (sql->tracking-paths (get-tracking-points)))
+(s/defmethod api-action :get-paths :- [t/Path] [[_ type] :- t/GetPaths]
+  (->> (tables type)
+       (get-points)
+       (sql->paths type)))
 
-(s/defmethod api-action :delete-tracking-path [[_ id] :- t/DeleteTrackingPath]
-  (jdbc/delete! *txn* :tracking_point ["path_id = ?" (date->sql id)])
+(s/defmethod api-action :delete-path [[_ type id] :- t/DeletePath]
+  (delete-points (tables type) id)
   nil)
 
 (defn execute-api-actions [actions]
