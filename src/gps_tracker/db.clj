@@ -6,6 +6,13 @@
   (:import [java.sql Timestamp]
            [java.util Date]))
 
+;;;;
+;; This namespace serves to coerce paths (tracking and waypoint) between
+;; their 'map' form and their relational database friendly form and handle
+;; external API calls that require this translation in interacting with
+;; the database.
+;;;;
+
 ;Todo: refactor waypoint and path code together
 
 (def db-spec (or (System/getenv "DATABASE_URL")
