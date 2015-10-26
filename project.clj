@@ -24,6 +24,8 @@
                  [prismatic/schema "1.0.1"]
                  [sebluy/gps-tracker-common "0.1.0"]]
 
+  :repositories [["gps-tracker-common" {:url "file://"}]]
+
   :min-lein-version "2.0.0"
   :uberjar-name "gps-tracker.jar"
   :jvm-opts ["-server"]

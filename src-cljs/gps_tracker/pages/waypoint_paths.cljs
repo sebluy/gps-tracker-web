@@ -19,9 +19,10 @@
          (map show @ids)]))))
 
 (defn new-button []
-  [:a.btn.btn-primary
-   {:href (routing/page->href {:handler :new-waypoint-path})}
-   "New Waypoint"])
+  [:input.btn.btn-primary
+   {:type     "button"
+    :value    "New Waypoint"
+    :on-click handlers/create-waypoint-path}])
 
 (defn page []
   [:div

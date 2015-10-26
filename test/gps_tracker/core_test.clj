@@ -39,7 +39,7 @@
   {:latitude (double n)
    :longitude (double (- n))})
 
-(defmulti generate-point (fn [type _ _ _ _] type))
+(defmulti generate-point (fn [type _ _ _] type))
 
 (defmethod generate-point :tracking [_ n i time]
   (-> (generate-common-point n)
@@ -66,8 +66,11 @@
    and assert equality"
   (let [paths (generate-paths type 4)]
     (doseq [path paths]
-      (db/api-action [:add-path type path]))
-    (t/is (= paths (db/api-action [:get-paths type])))))
+      (db/api-action {:action :add-path
+                      :path-type type
+                      :path path}))
+    (t/is (= paths (db/api-action {:action :get-paths
+                                   :path-type type})))))
 
 (defn test-delete-paths [type]
   "Generate 4 paths, add them to db, delete one of them, then read
@@ -75,10 +78,15 @@
   (let [paths (generate-paths type 4)
         removed-id (-> paths (nth 2) :id)]
     (doseq [path paths]
-      (db/api-action [:add-path type path]))
-    (db/api-action [:delete-path type removed-id])
+      (db/api-action {:action :add-path
+                      :path-type type
+                      :path path}))
+    (db/api-action {:action :delete-path
+                    :path-type type
+                    :path-id removed-id})
     (t/is (= (filterv #(not= (% :id) removed-id) paths)
-             (db/api-action [:get-paths type])))))
+             (db/api-action {:action :get-paths
+                             :path-type type})))))
 
 (t/deftest add-get-tracking-paths
   (test-add-get-paths :tracking))
@@ -92,4 +100,4 @@
 (t/deftest delete-waypoint-paths
   (test-delete-paths :waypoint))
 
-#_(t/run-tests)
+(t/run-tests)

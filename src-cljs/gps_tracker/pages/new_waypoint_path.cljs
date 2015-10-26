@@ -10,7 +10,7 @@
 
 (defn path-table []
   (sigsub/with-reagent-subs
-    [path [:page :waypoint-path]]
+    [points [:page :waypoint-path :points]]
     (fn []
       [:table.table
        [:thead
@@ -21,7 +21,7 @@
            (map-indexed
              (fn [index point]
                ^{:key index}
-               [show-point index point]) @path))]]])))
+               [show-point index point]) @points))]]])))
 
 (defn upload-button []
   [:input.btn.btn-primary
@@ -37,5 +37,3 @@
       [upload-button]]]]
    [:div.col-md-6 [path-table]]
    [:div.col-md-6 [map/waypoint-creation-map]]])
-
-

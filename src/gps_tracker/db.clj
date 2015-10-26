@@ -13,7 +13,10 @@
 ;; the database.
 ;;;;
 
-;Todo: refactor waypoint and path code together
+
+;; maybe seperate into namespaces (api, db, migrations, coercion)
+
+;; maybe provide schemas for db rows for clarity
 
 (def db-spec (or (System/getenv "DATABASE_URL")
                  {:subprotocol "postgresql"
@@ -58,24 +61,9 @@
     [:longitude "double precision"]
     [:path_id "timestamp with time zone"])))
 
+;; mapping from path type to database table
 (def tables {:tracking :tracking_point
              :waypoint :waypoint})
-
-;;;; path coercion
-
-(defn path->sql [type {:keys [id points]}]
-  "Converts a path to the equivalent sql point rows representation
-   using point->sql to convert each point in path"
-  (map-indexed
-   (fn [index point]
-     (point->sql type point id index))
-   points))
-
-(defn sql->path [type [id points]]
-  "Converts the sql point rows representation to a path using
-   sql->point to convert each row"
-  {:id (sql->date id)
-   :points (mapv #(sql->point type %) points)})
 
 ;;;; point coercion
 
@@ -119,6 +107,22 @@
   (->> (sql->common-point point)
        (sql->typed-point type)))
 
+;;;; path coercion
+
+(defn path->sql [type {:keys [id points]}]
+  "Converts a path to the equivalent sql point rows representation
+   using point->sql to convert each point in path"
+  (map-indexed
+   (fn [index point]
+     (point->sql type point id index))
+   points))
+
+(defn sql->path [type [id points]]
+  "Converts the sql point rows representation to a path using
+   sql->point to convert each row"
+  {:id (sql->date id)
+   :points (mapv #(sql->point type %) points)})
+
 ;; alias waypoint coercion because it is the same as generic point coercion
 (def sql->waypoint sql->point)
 (def waypoint->sql point->sql)
@@ -142,20 +146,20 @@
 
 ;;;; api actions
 
-(defmulti api-action (comp keyword first))
+(defmulti api-action :action)
 
 ;; tracking paths
-(s/defmethod api-action :add-path [[_ type path] :- t/AddPath]
-  (insert-points (tables type) (path->sql type path))
+(s/defmethod api-action :add-path [{:keys [path-type path]} :- t/AddPath]
+  (insert-points (tables path-type) (path->sql path-type path))
   nil)
 
-(s/defmethod api-action :get-paths :- [t/Path] [[_ type] :- t/GetPaths]
-  (->> (tables type)
+(s/defmethod api-action :get-paths :- [t/Path] [{:keys [path-type]} :- t/GetPaths]
+  (->> (tables path-type)
        (get-points)
-       (sql->paths type)))
+       (sql->paths path-type)))
 
-(s/defmethod api-action :delete-path [[_ type id] :- t/DeletePath]
-  (delete-points (tables type) id)
+(s/defmethod api-action :delete-path [{:keys [path-type path-id]} :- t/DeletePath]
+  (delete-points (tables path-type) path-id)
   nil)
 
 (defn execute-api-actions [actions]

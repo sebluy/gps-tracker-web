@@ -5,9 +5,12 @@
             [gps-tracker.util :as util])
   (:require-macros [cljs.core.async.macros :as async]))
 
+
 ;Todo: merge "tracking" and "waypoint" paths across platform
+; replace this "machine" with a simpler mechanism
 
 (defn post-actions [actions response-chan]
+  (println actions)
   (ajax/POST
     "/api"
     {:params          actions
@@ -93,7 +96,9 @@
   (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-path id]))))
 
 (defn upload-waypoint-path [path]
-  (post-action [:add-waypoint-path path]))
+  (post-action {:action :add-path
+                :path-type :waypoint
+                :path path}))
 
 (defn delete-path [id]
   (post-action [:delete-path id]))

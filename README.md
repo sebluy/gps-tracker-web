@@ -1,11 +1,7 @@
-Current:
-
 Todo:
 
-Add json api endpoint
+Update client to work with waypoints
 
-Push to heroku
+Push to heroku as a uberjar
 
-Add android client
-
-Copyright © 2015 FIXME
+Copyright © 2015 Sebastian Luy
