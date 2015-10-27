@@ -13,7 +13,7 @@
 
 (defn delete-waypoint-path [id]
   (remote/delete-waypoint-path id)
-  (navigation/redirect {:handler :waypoint-paths})
+  (navigation/redirect {:id :waypoint-paths})
   nil)
 
 (defn show-path [id]
@@ -21,12 +21,11 @@
   nil)
 
 (defn create-waypoint-path []
-  (navigation/redirect {:handler :new-waypoint-path})
-  (db/transition (fn [db] (assoc-in db [:page :waypoint-path] {:id (js/Date.) :points []}))))
+  (navigation/redirect {:id :new-waypoint-path}))
 
 (defn upload-waypoint-path []
   (remote/upload-waypoint-path (db/query [:page :waypoint-path]))
-  (navigation/redirect {:handler :waypoint-paths})
+  (navigation/redirect {:id :waypoint-paths})
   nil)
 
 (defn add-waypoint-to-path [point]

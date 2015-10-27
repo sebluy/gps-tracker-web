@@ -3,37 +3,16 @@
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.handlers :as handlers]))
 
-(defn show-point [index point]
-  [:tr
-   [:td (point :latitude)]
-   [:td (point :longitude)]])
-
-(defn path-table []
-  (sigsub/with-reagent-subs
-    [points [:page :waypoint-path :points]]
-    (fn []
-      [:table.table
-       [:thead
-        [:td "Latitude"]
-        [:td "Longitude"]
-        [:tbody
-         (doall
-           (map-indexed
-             (fn [index point]
-               ^{:key index}
-               [show-point index point]) @points))]]])))
-
 (defn upload-button []
   [:input.btn.btn-primary
    {:type     "button"
     :value    "Upload"
     :on-click handlers/upload-waypoint-path}])
 
-(defn page []
+(defn view []
   [:div
    [:div.page-header
     [:h1 "New Waypoint"
      [:p.pull-right.btn-toolbar
       [upload-button]]]]
-   [:div.col-md-6 [path-table]]
    [:div.col-md-6 [map/waypoint-creation-map]]])

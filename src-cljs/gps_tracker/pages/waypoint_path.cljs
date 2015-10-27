@@ -1,4 +1,4 @@
-(ns gps-tracker.pages.show-waypoint-path
+(ns gps-tracker.pages.waypoint-path
   (:require [gps-tracker.map :as map]
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.handlers :as handlers]))
@@ -9,15 +9,15 @@
     :type "button"
     :on-click #(handlers/delete-waypoint-path id)}])
 
-(defn page []
+(defn view []
   (sigsub/with-reagent-subs
-    [id [:page :path-id]
+    [id [:page :params :path-id]
      path [:waypoint-path @id]]
     (fn []
       [:div
        [:div.page-header
-        [:h1 (str "Path " @id)
+        [:h1 (.toLocaleString @id)
          [:p.pull-right.btn-toolbar
           [delete-button @id]]]]
        (when (not= @path :pending)
-         [map/viewing-map @path])])))
+         [map/viewing-map (@path :points)])])))

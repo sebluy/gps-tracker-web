@@ -4,27 +4,28 @@
             [gps-tracker.pages.path :as path]
             [gps-tracker.pages.waypoint-paths :as waypoint-paths]
             [gps-tracker.pages.new-waypoint-path :as new-waypoint-path]
-            [gps-tracker.pages.show-waypoint-path :as show-waypoint-path]
+            [gps-tracker.pages.waypoint-path :as waypoint-path]
             [sigsub.core :as sigsub :include-macros true]))
+
 
 ;Todo: reorganize pages more restful like rails
 
-(def pages {:paths paths/page
-            :path path/page
-            :waypoint-paths waypoint-paths/page
-            :show-waypoint-path show-waypoint-path/page
-            :new-waypoint-path new-waypoint-path/page})
+;;;; map from page-ids to views (rename ui to view)
+(def view-map {;;:paths paths/ui
+             ;;:path path/ui
+             :waypoint-paths waypoint-paths/view
+             :waypoint-path waypoint-path/view
+             :new-waypoint-path new-waypoint-path/view})
 
-(defn current-page []
+(defn current-view []
   (sigsub/with-reagent-subs
-    [handler [:page :handler]]
+    [id [:page :id]]
     (fn []
-      [(or (pages @handler) :div)])))
+      [(or (view-map @id) :div)])))
 
 (defn view []
   [:div.container
    [:div.row
     [:div.span12
      [navbar/navbar]
-     [current-page]]]])
-
+     [current-view]]]])

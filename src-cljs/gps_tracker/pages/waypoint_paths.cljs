@@ -3,20 +3,20 @@
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.routing :as routing]))
 
-(defn show [id]
+(defn show [{:keys [id]}]
   ^{:key id}
   [:li
    [:a.btn.btn-primary
-    {:href (routing/page->href {:handler :show-waypoint-path :route-params {:id id}})}
-    id]])
+    {:href (routing/page->href {:id :waypoint-path :params {:path-id id}})}
+    (.toLocaleString id)]])
 
 (defn waypoint-list []
   (sigsub/with-reagent-subs
-    [ids [:waypoint-path-ids]]
+    [paths [:waypoint-paths]]
     (fn []
-      (if-not (= @ids :pending)
+      (if-not (= @paths :pending)
         [:ul
-         (map show @ids)]))))
+         (map show @paths)]))))
 
 (defn new-button []
   [:input.btn.btn-primary
@@ -24,7 +24,7 @@
     :value    "New Waypoint"
     :on-click handlers/create-waypoint-path}])
 
-(defn page []
+(defn view []
   [:div
    [:div.page-header
     [:h1 "Waypoint Paths"

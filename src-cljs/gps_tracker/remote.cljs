@@ -10,7 +10,6 @@
 ; replace this "machine" with a simpler mechanism
 
 (defn post-actions [actions response-chan]
-  (println actions)
   (ajax/POST
     "/api"
     {:params          actions
@@ -51,49 +50,27 @@
   ([action] (post-action action identity))
   ([action callback] (async/put! action-callback-chan [action callback])))
 
-(defn get-path-ids []
-  (db/transition (fn [db] (assoc-in db [:remote :path-ids] :pending)))
-  (post-action
-    [:get-path-ids]
-    (fn [ids]
-      (db/transition (fn [db] (assoc-in db [:remote :path-ids] ids))))))
-
-(defn remove-path-ids []
-  (db/transition (fn [db] (util/dissoc-in db [:remote :path-ids]))))
-
-(defn get-waypoint-path-ids []
+(defn get-waypoint-paths []
   (db/transition
-    (fn [db] (assoc-in db [:remote :waypoint-path-ids] :pending)))
+    (fn [db] (assoc-in db [:remote :waypoint-paths] :pending)))
   (post-action
-    [:get-waypoint-path-ids]
-    (fn [ids]
+   {:action :get-paths
+    :path-type :waypoint}
+    (fn [paths]
       (db/transition
-        (fn [db] (assoc-in db [:remote :waypoint-path-ids] ids))))))
+        (fn [db] (assoc-in db [:remote :waypoint-paths] paths))))))
 
-(defn remove-waypoint-path-ids []
-  (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-path-ids]))))
+(defn remove-waypoint-paths []
+  (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-paths]))))
 
-(defn get-path [id]
-  (db/transition (fn [db] (assoc-in db [:remote :path id] :pending)))
-  (post-action
-    [:get-path id]
-    (fn [path]
-      (db/transition (fn [db] (assoc-in db [:remote :path id] path))))))
-
-(defn remove-path [id]
-  (db/transition (fn [db] (util/dissoc-in db [:remote :path id]))))
-
-(defn get-waypoint-path [id]
-  (db/transition
-    (fn [db] (assoc-in db [:remote :waypoint-path id] :pending)))
-  (post-action
-    [:get-waypoint-path id]
-    (fn [path]
-      (db/transition
-        (fn [db] (assoc-in db [:remote :waypoint-path id] path))))))
+(defn filter-out-path [paths id]
+  (filterv
+   (fn [path] (not= (path :id) id))
+   paths))
 
 (defn remove-waypoint-path [id]
-  (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-path id]))))
+  (db/transition
+   (fn [db] (update-in db [:remote :waypoint-paths] filter-out-path id))))
 
 (defn upload-waypoint-path [path]
   (post-action {:action :add-path
@@ -104,4 +81,7 @@
   (post-action [:delete-path id]))
 
 (defn delete-waypoint-path [id]
-  (post-action [:delete-waypoint-path id]))
+  (remove-waypoint-path id)
+  (post-action {:action :delete-path
+                :path-type :waypoint
+                :path-id id}))

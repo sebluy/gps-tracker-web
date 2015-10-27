@@ -2,68 +2,29 @@
   (:require [sigsub.core :as sigsub :include-macros :true]
             [gps-tracker.remote :as remote]))
 
-(defn path-id []
+(defn waypoint-paths []
   (sigsub/with-signals
-    [id [:page :route-params :id]]
+    [paths [:remote :waypoint-paths]]
     (fn []
-      (js/parseInt @id))))
-
-(defn path-ids []
-  (sigsub/with-signals
-    [remote-ids [:remote :path-ids]]
-    (fn []
-      (if @remote-ids
-        @remote-ids
-        (do (remote/get-path-ids)
+      (if @paths
+        @paths
+        (do (remote/get-waypoint-paths)
             :pending)))))
 
-(defn dispose-path-ids []
-  (fn [] (remote/remove-path-ids)))
-
-(defn waypoint-path-ids []
-  (sigsub/with-signals
-    [remote-ids [:remote :waypoint-path-ids]]
-    (fn []
-      (if @remote-ids
-        @remote-ids
-        (do (remote/get-waypoint-path-ids)
-            :pending)))))
-
-(defn dispose-waypoint-path-ids []
-  (fn [] (remote/remove-waypoint-path-ids)))
-
-(defn path [[id]]
-  (sigsub/with-signals
-    [path [:remote :path id]]
-    (fn []
-      (if @path
-        @path
-        (do (remote/get-path id)
-            :pending)))))
-
-(defn dispose-path [[id]]
-  (fn [] (remote/remove-path id)))
+(defn dispose-waypoint-paths []
+  (fn [] (remote/remove-waypoint-paths)))
 
 (defn waypoint-path [[id]]
   (sigsub/with-signals
-    [path [:remote :waypoint-path id]]
+    [paths [:waypoint-paths]]
     (fn []
-      (if @path
-        @path
-        (do (remote/get-waypoint-path id)
-            :pending)))))
+      (if (= @paths :pending)
+        :pending
+        (->> @paths
+             (filter (fn [path] (= (path :id) id)))
+             first)))))
 
-(defn dispose-waypoint-path [[id]]
-  (fn [] (remote/remove-waypoint-path id)))
+(sigsub/register-signal-skeleton [:waypoint-paths]
+                                 waypoint-paths dispose-waypoint-paths)
 
-(sigsub/register-signal-skeleton [:path-ids] path-ids dispose-path-ids)
-(sigsub/register-signal-skeleton
-  [:waypoint-path-ids]
-  waypoint-path-ids
-  dispose-waypoint-path-ids)
-(sigsub/register-signal-skeleton [:path] path dispose-path)
-(sigsub/register-signal-skeleton
-  [:waypoint-path]
-  waypoint-path
-  dispose-waypoint-path)
-(sigsub/register-signal-skeleton [:page :path-id] path-id)
+(sigsub/register-signal-skeleton [:waypoint-path] waypoint-path)

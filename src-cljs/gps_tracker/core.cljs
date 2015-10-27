@@ -10,4 +10,3 @@
 (defn init! []
   (navigation/hook-browser)
   (mount-components))
-

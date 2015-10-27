@@ -86,4 +86,3 @@
   (reagent/create-class
     {:reagent-render      div
      :component-did-mount draw-waypoint-creation-map}))
-

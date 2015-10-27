@@ -12,5 +12,3 @@
 
 (defn transition [transition-fn]
   (swap! db #(transition-fn %)))
-
-

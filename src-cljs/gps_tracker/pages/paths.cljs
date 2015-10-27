@@ -18,7 +18,7 @@
         [:ul
          (map show-path-id @ids)]))))
 
-(defn page []
+(defn ui []
   [:div
    [:div.page-header
     [:h1 "Paths"]]

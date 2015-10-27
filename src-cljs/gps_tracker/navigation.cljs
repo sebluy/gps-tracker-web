@@ -4,10 +4,20 @@
             [goog.events :as events]
             [clojure.string :as string]
             [gps-tracker.db :as db])
-  (:import goog.history.EventType))
+  (:import [goog.history EventType]))
+
+;;;; seed page with data on navigate
+(defmulti seed-page (fn [page _] (page :id)))
+
+(defmethod seed-page :new-waypoint-path [page _]
+  (assoc page :waypoint-path {:id (js/Date.)
+                              :points []}))
+
+(defmethod seed-page :default [page _]
+  page)
 
 (defn navigate [page]
-  (db/transition (fn [db] (assoc db :page page))))
+  (db/transition (fn [db] (assoc db :page (seed-page page db)))))
 
 (defn redirect [page]
   (navigate page)
@@ -16,7 +26,7 @@
 (defn- initialize-route []
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)
-      (let [page {:handler :paths}]
+      (let [page {:id :waypoint-paths}]
         (history/replace-token page)
         (navigate page))
       (navigate (routing/route->page history-token)))))
