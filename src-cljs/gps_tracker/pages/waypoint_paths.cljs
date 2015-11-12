@@ -16,7 +16,8 @@
     (fn []
       (if-not (= @paths :pending)
         [:ul
-         (map show @paths)]))))
+         (map show @paths)]
+        [:div.jumbotron [:h1.text-center "Pending..."]]))))
 
 (defn new-button []
   [:input.btn.btn-primary
