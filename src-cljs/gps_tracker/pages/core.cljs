@@ -1,7 +1,5 @@
 (ns gps-tracker.pages.core
   (:require [gps-tracker.pages.navbar :as navbar]
-            [gps-tracker.pages.paths :as paths]
-            [gps-tracker.pages.path :as path]
             [gps-tracker.pages.waypoint-paths :as waypoint-paths]
             [gps-tracker.pages.new-waypoint-path :as new-waypoint-path]
             [gps-tracker.pages.waypoint-path :as waypoint-path]

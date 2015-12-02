@@ -11,4 +11,4 @@
   ([path] (sigsub/query path)))
 
 (defn transition [transition-fn]
-  (swap! db #(transition-fn %)))
+  (swap! db transition-fn))

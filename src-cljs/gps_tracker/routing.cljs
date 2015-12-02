@@ -1,10 +1,9 @@
 (ns gps-tracker.routing
   (:require [bidi.bidi :as bidi]
-            [clojure.set :as s]))
+            [clojure.set :as s])
+  (:import [goog Uri]))
 
-(def routes ["" {"tracking-paths" :tracking-paths
-                 "tracking-path/" {[:path-id] :tracking-path}
-                 "waypoint-paths" :waypoint-paths
+(def routes ["" {"waypoint-paths" :waypoint-paths
                  "waypoint-path/" {"new" :new-waypoint-path
                                    [:path-id] :waypoint-path}}])
 
@@ -14,6 +13,9 @@
 
 ;; routable is a url safe version of a page
 
+;; converts a page into a representation that can be put in a url
+;; e.g. converts date parameters to an equivalent string format
+;; should be reversable by the corresponding routeable->page
 (defmulti page->routeable :id)
 
 (defmethod page->routeable :waypoint-path [page]
@@ -21,6 +23,7 @@
 
 (defmethod page->routeable :default [page] page)
 
+;; reverses page->routeable
 (defmulti routeable->page :id)
 
 (defmethod routeable->page :waypoint-path [routeable]
@@ -39,7 +42,7 @@
 (defn route->page [route] (-> route route->routeable routeable->page))
 
 (defn- route->href [route]
-  (str "/#" route))
+  (str "/#" (Uri. route)))
 
 (defn page->href [page]
   (-> page

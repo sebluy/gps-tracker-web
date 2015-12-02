@@ -6,6 +6,8 @@
             [gps-tracker.db :as db])
   (:import [goog.history EventType]))
 
+(def default-page {:id :waypoint-paths})
+
 ;;;; seed page with data on navigate
 (defmulti seed-page (fn [page _] (page :id)))
 
@@ -26,9 +28,9 @@
 (defn- initialize-route []
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)
-      (let [page {:id :waypoint-paths}]
-        (history/replace-token page)
-        (navigate page))
+      (do
+        (history/replace-token default-page)
+        (navigate default-page))
       (navigate (routing/route->page history-token)))))
 
 (defn hook-browser []

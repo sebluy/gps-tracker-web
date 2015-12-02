@@ -42,8 +42,8 @@
   :cljsbuild
   {:builds {:app {:source-paths ["src-cljs"]
                   :compiler     {:output-to     "resources/public/js/app.js"
-                                 :main          "gps-tracker.env"
                                  :output-dir    "resources/public/js/out"
+                                 :main "gps-tracker.env"
                                  :asset-path    "js/out"
                                  :optimizations :none
                                  :pretty-print  true}}}}
@@ -65,7 +65,9 @@
    :dev     {:source-paths ["env/dev/clj"]
              :cljsbuild    {:builds
                             {:app
-                             {:source-paths ["env/dev/cljs"] :compiler {:source-map true}}}}
+                             {
+                              :source-paths ["env/dev/cljs/"]
+                              :compiler {:source-map true}}}}
 
              :figwheel     {:http-server-root "public"
                             :server-port      3449
