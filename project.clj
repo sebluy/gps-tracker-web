@@ -65,8 +65,7 @@
    :dev     {:source-paths ["env/dev/clj"]
              :cljsbuild    {:builds
                             {:app
-                             {
-                              :source-paths ["env/dev/cljs/"]
+                             {:source-paths ["env/dev/cljs/"]
                               :compiler {:source-map true}}}}
 
              :figwheel     {:http-server-root "public"

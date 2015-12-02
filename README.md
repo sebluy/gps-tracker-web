@@ -9,15 +9,17 @@ Handle errors
 - log to console errors
 - display nice message on screen (steal from fractify)
 
+Add authentication/authorization.
+
 Bring libraries up to date.
+
+Remove paredit from emacs.
 
 Rename db to state.
 
 Rewrite handlers to only make one final swap! on db.
 
 Add tests.
-
-Add authentication/authorization.
 
 Add distance between each waypoint to waypoint creation map.
 
