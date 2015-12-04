@@ -22,8 +22,9 @@
       [(or (view-map @id) :div)])))
 
 (defn view []
-  [:div.container
-   [:div.row
-    [:div.span12
-     [navbar/navbar]
-     [current-view]]]])
+  [:div
+   [:div.container
+    [:div.row
+     [:div.span12
+      [navbar/navbar]
+      [current-view]]]]])

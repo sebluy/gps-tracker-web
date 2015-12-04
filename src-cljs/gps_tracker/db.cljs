@@ -16,4 +16,5 @@
   (try
     (swap! db transition-fn)
     (catch js/Object e
-      (pp/pprint (:value (ex-data e))))))
+      (pp/pprint (:value (ex-data e)))
+      (js/alert "Something went wrong..."))))

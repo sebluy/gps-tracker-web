@@ -1,5 +1,6 @@
 (ns gps-tracker.pages.navbar
-  (:require [gps-tracker.routing :as routing]))
+  (:require [gps-tracker.routing :as routing]
+            [sigsub.core :as sigsub :include-macros true]))
 
 (defn navbar []
   [:div.navbar.navbar-inverse.navbar-fixed-top

@@ -24,8 +24,14 @@
 (s/defschema Remote {:waypoint-paths (s/either [ct/WaypointPath]
                                                (s/eq :pending))})
 
+(s/defschema Error {:message s/Str})
+
 (s/defschema State {:page Page
-                    (s/optional-key :remote) Remote})
+                    (s/optional-key :remote) Remote
+                    (s/optional-key :error) Error})
+
+(s/defschema Initial {:page {:id (s/pred nil?)
+                             :params (s/pred nil?)}})
 
 ;; still have to fix {:page {:id nil :params nil}}
-(def validator (s/validator State))
+(def validator (s/validator (s/either Initial State)))
