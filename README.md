@@ -2,8 +2,6 @@ Todo:
 
 Handle errors
 - on remote errors revert to last known state
-- log to console errors
-- display nice message on screen (steal from fractify)
 
 Show pending circle for asyncronous (remote) operations.
 

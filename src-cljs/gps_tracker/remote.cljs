@@ -1,54 +1,70 @@
 (ns gps-tracker.remote
   (:require [cljs.core.async :as async]
+            [cljs.pprint :as pp]
             [ajax.core :as ajax]
             [gps-tracker.db :as db]
-            [gps-tracker.util :as util])
-  (:require-macros [cljs.core.async.macros :as async]))
+            [gps-tracker.util :as util]))
 
+; Main purpose is to enforce strict in-order processing of remote api requests.
+; If a request is in flight, any further requests will be queued and sent one
+; at a time.
+; The server will recieve api requests in the order they are put on the queued.
+; The same is true for the ordering of the callback calls on request return.
 
-;Todo: merge "tracking" and "waypoint" paths across platform
-; replace this "machine" with a simpler mechanism
+(declare on-success)
+(declare on-error)
 
-(defn post-actions [actions response-chan]
+(defn post-actions [actions]
+  (println "Posting: ")
+  (pp/pprint actions)
   (ajax/POST
     "/api"
     {:params          actions
-     :handler         #(async/put! response-chan %)
+     :handler         on-success
+     :error-handler   on-error
      :format          :edn
      :response-format :edn}))
 
-; main purpose is to enforce strict in order processing of remote api requests.
-; if a request is in flight, any further requests will be queued and sent in a
-; batch when the initial request returns. the server is guaranteed to
-; recieve api requests in the order they are put on the chan. the same is true
-; for the ordering of the callbacks on request return.
-(defn run-remote-action-machine [action-callback-chan]
-  (let [response-chan (async/chan)]
-    (async/go-loop
-      [pending [] queued []]
-      (async/alt!
-        action-callback-chan
-        ([action-callback]
-          (if (seq pending)
-            (recur pending (conj queued action-callback))
-            (do (post-actions [(first action-callback)] response-chan)
-                (recur [action-callback] []))))
-        response-chan
-        ([responses]
-          (doall (map (fn [[_ callback] response] (callback response))
-                      pending
-                      responses))
-          (if (seq queued)
-            (do (post-actions (into [] (map first queued)) response-chan)
-                (recur queued []))
-            (recur [] [])))))))
+(defn queue-action [action-handler]
+  (if (empty? (db/base-query [:remote :action-queue]))
+    (do (post-actions [(action-handler :action)])
+        (db/transition
+         (fn [db]
+           (assoc-in db [:remote :action-queue] #queue [action-handler]))))
+    (db/transition
+     (fn [db] (update-in db [:remote :action-queue] conj action-handler)))))
 
-(def action-callback-chan (async/chan))
-(run-remote-action-machine action-callback-chan)
+(defn post-next []
+  (if-let [next (first (db/base-query [:remote :action-queue]))]
+    (post-actions [next])))
+
+(defn on-success [response]
+  "Passes the response on to the callback associated to the action handler,
+   then pops the current action and starts sending the next action
+   if there are any."
+  (let [current (first (db/base-query [:remote :action-queue]))]
+    (db/transition (fn [db] (update-in db [:remote :action-queue] pop)))
+    ((current :callback) (first response)))
+  (post-next))
+
+(defn on-error [_]
+  "Rolls back to before the action was sent.
+   Gets the state from before the remote action was queued,
+   wipes out any remote action queue leftover from the existing state,
+   and sets as the current state."
+  (let [current (first (db/base-query [:remote :action-queue]))
+        old-state (assoc-in (current :state) [:remote :action-queue] [])]
+    (js/alert "Remote error... Rolling back state")
+    (db/transition (fn [_] old-state))))
 
 (defn post-action
+  "Takes an action to send and a callback to be called on response.
+   Captures the current state to be rolled back to on error."
   ([action] (post-action action identity))
-  ([action callback] (async/put! action-callback-chan [action callback])))
+  ([action callback]
+   (queue-action {:action action :callback callback :state (db/base-query)})))
+
+;; application specific code
 
 (defn get-waypoint-paths []
   (db/transition
@@ -56,9 +72,10 @@
   (post-action
    {:action :get-paths
     :path-type :waypoint}
-    (fn [paths]
-      (db/transition
-        (fn [db] (assoc-in db [:remote :waypoint-paths] paths))))))
+   (fn [paths]
+     (db/transition
+      (fn [db]
+        (assoc-in db [:remote :waypoint-paths] paths))))))
 
 (defn remove-waypoint-paths []
   (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-paths]))))

@@ -8,6 +8,10 @@
 (sigsub/register-default-signal-skeleton
   (sigsub/get-in-atom-run-fn db))
 
+(defn base-query
+  ([] @db)
+  ([path] (get-in @db path)))
+
 (defn query
   ([] (sigsub/query nil))
   ([path] (sigsub/query path)))
@@ -16,5 +20,6 @@
   (try
     (swap! db transition-fn)
     (catch js/Object e
+      (.log js/console e)
       (pp/pprint (:value (ex-data e)))
       (js/alert "Something went wrong..."))))

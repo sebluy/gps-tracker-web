@@ -21,17 +21,16 @@
                             ListWaypointsPage
                             NewWaypointPage))
 
-(s/defschema Remote {:waypoint-paths (s/either [ct/WaypointPath]
-                                               (s/eq :pending))})
+(s/defschema ActionHandler {:action ct/Action
+                            :callback (s/pred ifn?) ;; run on successful action
+                            :state s/Any}) ;; state to rollback to on error
 
-(s/defschema Error {:message s/Str})
+(s/defschema Remote
+  {:action-queue [ActionHandler]
+   (s/optional-key :waypoint-paths) (s/either [ct/WaypointPath]
+                                              (s/eq :pending))})
 
 (s/defschema State {:page Page
-                    (s/optional-key :remote) Remote
-                    (s/optional-key :error) Error})
+                    :remote Remote})
 
-(s/defschema Initial {:page {:id (s/pred nil?)
-                             :params (s/pred nil?)}})
-
-;; still have to fix {:page {:id nil :params nil}}
-(def validator (s/validator (s/either Initial State)))
+(def validator (s/validator State))
