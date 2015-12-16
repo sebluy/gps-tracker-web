@@ -2,6 +2,15 @@ Todo:
 
 Handle errors
 - on remote errors revert to last known state
+- on read, add fail callback
+
+Look into history/navigation (especially on page load)
+
+Fix figwheel repl
+
+Use lein heroku for uberjar deployment.
+
+Don't allow a empty path to be uploaded.
 
 Show pending circle for asyncronous (remote) operations.
 

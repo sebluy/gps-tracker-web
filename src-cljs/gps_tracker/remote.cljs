@@ -15,8 +15,6 @@
 (declare on-error)
 
 (defn post-actions [actions]
-  (println "Posting: ")
-  (pp/pprint actions)
   (ajax/POST
     "/api"
     {:params          actions
@@ -36,7 +34,7 @@
 
 (defn post-next []
   (if-let [next (first (db/base-query [:remote :action-queue]))]
-    (post-actions [next])))
+    (post-actions [(next :action)])))
 
 (defn on-success [response]
   "Passes the response on to the callback associated to the action handler,
@@ -48,14 +46,10 @@
   (post-next))
 
 (defn on-error [_]
-  "Rolls back to before the action was sent.
-   Gets the state from before the remote action was queued,
-   wipes out any remote action queue leftover from the existing state,
-   and sets as the current state."
-  (let [current (first (db/base-query [:remote :action-queue]))
-        old-state (assoc-in (current :state) [:remote :action-queue] [])]
-    (js/alert "Remote error... Rolling back state")
-    (db/transition (fn [_] old-state))))
+  "Stub for now... Just display an error, clear the action queue
+   and tell the user to refresh."
+  (js/alert "Remote error... You may need to refresh the page.")
+  (db/transition (fn [db] (assoc-in db [:remote :action-queue] []))))
 
 (defn post-action
   "Takes an action to send and a callback to be called on response.

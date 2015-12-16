@@ -28,17 +28,15 @@
 (defn- initialize-route []
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)
-      (do
-        (history/replace-token default-page)
-        (navigate default-page))
+      (history/replace-token default-page)
       (navigate (routing/route->page history-token)))))
 
 (defn hook-browser []
+  (initialize-route)
   (doto history/history
     (events/listen
       EventType.NAVIGATE
       (fn [event]
         (navigate (routing/route->page (.-token event)))
         (.preventDefault event)))
-    (.setEnabled true))
-  (initialize-route))
+    (.setEnabled true)))
