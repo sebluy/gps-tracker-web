@@ -7,6 +7,8 @@
                  [org.clojure/tools.trace "0.7.9"]
                  [sebluy/sigsub "0.1.2"]
                  [org.omcljs/om "1.0.0-alpha30"]
+                 [sablono "0.5.3"]
+                 [cljsjs/react-dom-server "0.14.3-0"]
                  [bidi "1.20.3"]
                  [cljs-ajax "0.3.14"]
                  [environ "1.0.0"]

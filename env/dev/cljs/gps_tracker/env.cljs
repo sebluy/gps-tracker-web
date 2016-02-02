@@ -7,6 +7,6 @@
 (figwheel/start
  {:load-warninged-code true
   :websocket-url "ws://localhost:3449/figwheel-ws"
-  :jsload-callback core/mount-components})
+  :jsload-callback core/mount-root})
 
 (core/init!)
