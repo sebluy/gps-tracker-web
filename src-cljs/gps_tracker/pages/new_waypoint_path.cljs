@@ -3,6 +3,7 @@
             [sigsub.core :as sigsub :include-macros true]
             [gps-tracker.handlers :as handlers]))
 
+;; this distance code could probably live somewhere else
 (defn point->latlng [point]
   (google.maps.LatLng. (point :latitude) (point :longitude)))
 

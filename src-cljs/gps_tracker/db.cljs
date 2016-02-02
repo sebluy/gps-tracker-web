@@ -16,10 +16,12 @@
   ([] (sigsub/query nil))
   ([path] (sigsub/query path)))
 
-(defn transition [transition-fn]
+(defn transition
+  "Applies a function to the current state of the application.
+   Resulting application state is validated using schema and
+   errors are handled by displaying an alert."
+  [transition-fn]
   (try
     (swap! db transition-fn)
     (catch js/Object e
-      (.log js/console e)
-      (pp/pprint (:value (ex-data e)))
       (js/alert "Something went wrong..."))))

@@ -7,24 +7,24 @@
                  "waypoint-path/" {"new" :new-waypoint-path
                                    [:path-id] :waypoint-path}}])
 
-;; page {:id Keyword
-;;       :params Any
-;;       Other Any}
+;; todo: integrate schema here
 
 ;; routable is a url safe version of a page
 
-;; converts a page into a representation that can be put in a url
-;; e.g. converts date parameters to an equivalent string format
-;; should be reversable by the corresponding routeable->page
-(defmulti page->routeable :id)
+(defmulti page->routeable
+  "Converts a page into a representation that can be put in a url
+  e.g. converts date parameters to an equivalent string format
+  should be reversable by the corresponding routeable->page."
+  :id)
 
 (defmethod page->routeable :waypoint-path [page]
   (update-in page [:params :path-id] #(.getTime %)))
 
 (defmethod page->routeable :default [page] page)
 
-;; reverses page->routeable
-(defmulti routeable->page :id)
+(defmulti routeable->page
+  "Reverses page->routeable"
+  :id)
 
 (defmethod routeable->page :waypoint-path [routeable]
   (update-in routeable [:params :path-id] #(js/Date. (long %))))

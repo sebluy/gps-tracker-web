@@ -1,4 +1,10 @@
+Run:
+lein figwheel
+load env/dev/clj/gps_tracker/env.clj
+
 Todo:
+
+Switch to om.next
 
 Handle errors
 - on remote errors revert to last known state
@@ -7,6 +13,8 @@ Handle errors
 Look into history/navigation (especially on page load)
 
 Fix figwheel repl
+
+Start using public/private in namespaces with better discipline.
 
 Use lein heroku for uberjar deployment.
 

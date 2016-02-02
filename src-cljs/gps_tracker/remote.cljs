@@ -23,7 +23,10 @@
      :format          :edn
      :response-format :edn}))
 
-(defn queue-action [action-handler]
+(defn queue-action
+  "Adds an action to the queue of remote actions. If the queue is currently
+   empty, then the action is sent immediately."
+  [action-handler]
   (if (empty? (db/base-query [:remote :action-queue]))
     (do (post-actions [(action-handler :action)])
         (db/transition
@@ -32,22 +35,26 @@
     (db/transition
      (fn [db] (update-in db [:remote :action-queue] conj action-handler)))))
 
-(defn post-next []
+(defn post-next
+  "Posts next action if there is one, otherwise does nothing."
+  []
   (if-let [next (first (db/base-query [:remote :action-queue]))]
     (post-actions [(next :action)])))
 
-(defn on-success [response]
+(defn on-success
   "Passes the response on to the callback associated to the action handler,
    then pops the current action and starts sending the next action
    if there are any."
+  [response]
   (let [current (first (db/base-query [:remote :action-queue]))]
     (db/transition (fn [db] (update-in db [:remote :action-queue] pop)))
     ((current :callback) (first response)))
   (post-next))
 
-(defn on-error [_]
+(defn on-error
   "Stub for now... Just display an error, clear the action queue
    and tell the user to refresh."
+  [_]
   (js/alert "Remote error... You may need to refresh the page.")
   (db/transition (fn [db] (assoc-in db [:remote :action-queue] []))))
 

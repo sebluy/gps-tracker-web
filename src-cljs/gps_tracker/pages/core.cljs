@@ -9,11 +9,9 @@
 ;Todo: reorganize pages more restful like rails
 
 ;;;; map from page-ids to views (rename ui to view)
-(def view-map {;;:paths paths/ui
-             ;;:path path/ui
-             :waypoint-paths waypoint-paths/view
-             :waypoint-path waypoint-path/view
-             :new-waypoint-path new-waypoint-path/view})
+(def view-map {:waypoint-paths waypoint-paths/view
+               :waypoint-path waypoint-path/view
+               :new-waypoint-path new-waypoint-path/view})
 
 (defn current-view []
   (sigsub/with-reagent-subs

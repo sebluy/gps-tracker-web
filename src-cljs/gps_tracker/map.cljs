@@ -61,7 +61,9 @@
     (add-markers map path)
     (.setMap poly map)))
 
-(defn viewing-map [path]
+(defn viewing-map
+  "Creates a reagent component using for viewing (not modifying) paths."
+  [path]
   (reagent/create-class
     {:reagent-render      div
      :component-did-mount #(draw-map-with-path path)}))
@@ -71,7 +73,8 @@
   (google.maps.Marker. (clj->js {:position latlng :map map}))
   (handlers/add-waypoint-to-path (latlng->point latlng)))
 
-(defn draw-waypoint-creation-map []
+(defn draw-waypoint-creation-map
+  []
   (let [map (make-google-map (point->latlng {:latitude 0.0 :longtiude 0.0}))
         polyline (make-polyline [])]
     (.setMap polyline map)
@@ -82,7 +85,9 @@
                       polyline
                       (.-latLng event))))))
 
-(defn waypoint-creation-map []
+(defn waypoint-creation-map
+  "Creates a reagent component using for creating new waypoint paths."
+  []
   (reagent/create-class
     {:reagent-render      div
      :component-did-mount draw-waypoint-creation-map}))

@@ -1,5 +1,6 @@
 (ns gps-tracker.util)
 
+;; maybe move to common
 (defn dissoc-in [map path]
   (condp = (count path)
     0 map

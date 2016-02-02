@@ -1,13 +1,12 @@
 (defproject gps-tracker "0.1.0-SNAPSHOT"
 
   :description "The web interface for a GPS tracker application"
-  :url "http://example.com/FIXME"
-
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/clojurescript "1.7.28"]
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
                  [org.clojure/tools.trace "0.7.9"]
                  [sebluy/sigsub "0.1.2"]
+                 [org.omcljs/om "1.0.0-alpha30"]
                  [bidi "1.20.3"]
                  [cljs-ajax "0.3.14"]
                  [environ "1.0.0"]

@@ -8,8 +8,9 @@
 
 (def default-page {:id :waypoint-paths})
 
-;;;; seed page with data on navigate
-(defmulti seed-page (fn [page _] (page :id)))
+(defmulti seed-page
+  "Seeds page with data on navigate."
+  (fn [page _] (page :id)))
 
 (defmethod seed-page :new-waypoint-path [page _]
   (assoc page :waypoint-path {:id (js/Date.)
@@ -31,7 +32,10 @@
       (history/replace-token default-page)
       (navigate (routing/route->page history-token)))))
 
-(defn hook-browser []
+(defn hook-browser
+  "Navigates to the page given by the url bar if available,
+  and attaches the event handler to watch for url bar changes."
+  []
   (initialize-route)
   (doto history/history
     (events/listen

@@ -20,9 +20,12 @@
   (compojure/GET "/" [] (hiccup/html (page/page))))
 
 (defn parse-port [port]
+  "Returns the port to use for the web server.
+   3000 by default (for development) or use a system provided port (production)."
   (Integer/parseInt (or port (System/getenv "PORT") "3000")))
 
 (def handler
+  "A handler with just default middleware and support for edn and json-kw."
   (let [base-handler (-> #'routes
                          (format/wrap-restful-format :formats [:edn :json-kw])
                          (middleware/wrap-defaults middleware/api-defaults))]

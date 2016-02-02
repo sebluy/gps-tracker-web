@@ -68,7 +68,8 @@
 ;;;; point coercion
 
 ;; to sql
-(defmulti typed-point->sql (fn [type _] type))
+(defmulti typed-point->sql
+  (fn [type point] type))
 
 (defmethod typed-point->sql :tracking [_ point]
   (update point :time date->sql))
@@ -86,7 +87,8 @@
        (typed-point->sql type)))
 
 ;; from sql
-(defmulti sql->typed-point (fn [type _] type))
+(defmulti sql->typed-point
+  (fn [type sql-point] type))
 
 (defn remove-nils [map]
   (->> (filter second map)
@@ -103,7 +105,7 @@
   (dissoc point :path_id :index))
 
 (defn sql->point [type point]
-  "Convert a sql row to a point. Does the 'reverse' of point->sql"
+  "Convert a sql row to a point. Does the 'reverse' of point->sql."
   (->> (sql->common-point point)
        (sql->typed-point type)))
 
@@ -132,6 +134,8 @@
        (mapv #(sql->path type %))))
 
 ;;;; db operations
+;; Each of these operations applies to the transaction that is
+;; currently bound to *txn*.
 
 (defn get-points [table]
   (jdbc/query *txn*
@@ -163,7 +167,7 @@
   nil)
 
 (defn execute-api-actions [actions]
-  "Executes all actions in a transaction and returns results in a list"
+  "Executes all actions in a transaction and returns results in a list."
   (try
     (jdbc/with-db-transaction
       [transaction db-spec]
