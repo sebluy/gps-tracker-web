@@ -15,12 +15,16 @@
                :waypoint-path waypoint-path/view
                :new-waypoint-path new-waypoint-path/view})
 
-(defn current-view []
+(defn current-view [props]
   (if-let [view (view-map :waypoint-paths)]
-    (view)
+    (view props)
     (html/html [:div "Page not found"])))
 
 (om/defui View
+  static om/IQuery
+  (query
+   [this]
+   [{:waypoint-paths (om/get-query waypoint-paths/View)}])
   Object
   (render
    [this]
@@ -30,4 +34,6 @@
       [:div.row
        [:div.span12
         (navbar/navbar)
-        (current-view)]]]])))
+        (current-view (om/props this))]]]])))
+
+;(-> (om/class->any gps-tracker.core/reconciler waypoint-paths/View) om/props keys)
