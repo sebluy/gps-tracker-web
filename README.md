@@ -1,5 +1,6 @@
 Run:
 lein figwheel
+cider-connect 7888
 load env/dev/clj/gps_tracker/env.clj
 
 Todo:

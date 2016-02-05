@@ -8,8 +8,7 @@
             [gps-tracker.pages.core :as pages]
             [gps-tracker.navigation :as navigation]))
 
-(def initial-state {:page {:id :waypoint-paths}
-                    :remote {:action-queue []}})
+(def initial-state {:page {:id :waypoint-paths}})
 
 (defmulti read om/dispatch)
 
@@ -21,8 +20,21 @@
      :remote true}))
 
 (defmethod read :default
+  [{:keys [state]} key params]
+  (if-let [value (@state key)]
+    {:value value}
+    {:value :not-found}))
+
+(defmulti mutate om/dispatch)
+
+(defmethod mutate 'set-page
+  [{:keys [state]} key {:keys [page]}]
+  {:value {:keys [:page]}
+   :action #(swap! state assoc :page page)})
+
+(defmethod mutate :default
   [env key params]
-  {:value :not-found})
+  {:action #(println "Bad mutation")})
 
 (defn on-error
   [_]
@@ -40,12 +52,13 @@
 
 (defn send
   [query callback]
+  (println "Sending " query)
   (post-actions [{:action :get-paths
                   :path-type :waypoint}]
                 (fn [results]
                   (callback {:waypoint-paths (first results)}))))
 
-(def parser (om/parser {:read read}))
+(def parser (om/parser {:read read :mutate mutate}))
 
 (def reconciler (om/reconciler {:state initial-state
                                 :send send

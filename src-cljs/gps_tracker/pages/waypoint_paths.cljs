@@ -6,9 +6,9 @@
 
 (defn show [{:keys [id]}]
   [:li
+   {:key id}
    [:a.btn.btn-primary
-    {:href (routing/page->href {:id :waypoint-path :params {:path-id id}})
-     :key id}
+    {:href (routing/page->href {:id :waypoint-path :params {:path-id id}})}
     (.toLocaleString id)]])
 
 (defn waypoint-path-list [paths]

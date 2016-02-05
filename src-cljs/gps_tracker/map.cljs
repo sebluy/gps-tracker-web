@@ -1,12 +1,12 @@
 (ns gps-tracker.map
   (:require [goog.dom :as dom]
             [gps-tracker.handlers :as handlers]
-            [reagent.core :as reagent]))
+            [om.next :as om]
+            [sablono.core :as sablono]))
 
 (def canvas-id "map-canvas")
 
-(defn div []
-  [:div#map-canvas])
+(def div [:div#map-canvas])
 
 (def path-options
   {:geodesic      true
@@ -61,12 +61,17 @@
     (add-markers map path)
     (.setMap poly map)))
 
-(defn viewing-map
-  "Creates a reagent component using for viewing (not modifying) paths."
-  [path]
-  (reagent/create-class
-    {:reagent-render      div
-     :component-did-mount #(draw-map-with-path path)}))
+(om/defui ViewingMap
+  Object
+  (componentDidMount
+   [this]
+   (let [path (om/props this)]
+     (draw-map-with-path path)))
+  (render
+   [this]
+   (sablono/html div)))
+
+(def viewing-map (om/factory ViewingMap))
 
 (defn add-latlng-to-waypoint-path [map polyline latlng]
   (.push (.getPath polyline) latlng)
@@ -85,9 +90,13 @@
                       polyline
                       (.-latLng event))))))
 
-(defn waypoint-creation-map
-  "Creates a reagent component using for creating new waypoint paths."
-  []
-  (reagent/create-class
-    {:reagent-render      div
-     :component-did-mount draw-waypoint-creation-map}))
+(om/defui WaypointCreationMap
+  Object
+  (componentDidMount
+   [this]
+   (draw-waypoint-creation))
+  (render
+   [this]
+   (sablono/html div)))
+
+(def waypoint-creation-map (om/factory WaypointCreationMap))

@@ -19,28 +19,32 @@
 (defmethod seed-page :default [page _]
   page)
 
-(defn navigate [page]
-  (db/transition (fn [db] (assoc db :page (seed-page page db)))))
+;(defn navigate [page]
+;  (db/transition (fn [db] (assoc db :page (seed-page page db)))))
 
 (defn redirect [page]
   (navigate page)
   (history/replace-token page))
 
-(defn- initialize-route []
+(defn- initialize-route [on-navigate]
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)
       (history/replace-token default-page)
-      (navigate (routing/route->page history-token)))))
+      (on-navigate (routing/route->page history-token)))))
+
+(defn unhook-browser
+  []
+  (events/removeAll history/history EventType.NAVIGATE))
 
 (defn hook-browser
   "Navigates to the page given by the url bar if available,
   and attaches the event handler to watch for url bar changes."
-  []
-  (initialize-route)
+  [on-navigate]
+  (initialize-route on-navigate)
   (doto history/history
     (events/listen
       EventType.NAVIGATE
       (fn [event]
-        (navigate (routing/route->page (.-token event)))
+        (on-navigate (routing/route->page (.-token event)))
         (.preventDefault event)))
     (.setEnabled true)))
