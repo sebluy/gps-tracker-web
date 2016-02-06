@@ -73,28 +73,29 @@
 
 (def viewing-map (om/factory ViewingMap))
 
-(defn add-latlng-to-waypoint-path [map polyline latlng]
+(defn add-latlng-to-waypoint-path [component map polyline latlng]
   (.push (.getPath polyline) latlng)
   (google.maps.Marker. (clj->js {:position latlng :map map}))
-  (handlers/add-waypoint-to-path (latlng->point latlng)))
+  (om/update-state! component update :points conj (latlng->point latlng)))
 
 (defn draw-waypoint-creation-map
-  []
+  [path-component]
   (let [map (make-google-map (point->latlng {:latitude 0.0 :longtiude 0.0}))
         polyline (make-polyline [])]
     (.setMap polyline map)
     (.addListener map "click"
                   (fn [event]
                     (add-latlng-to-waypoint-path
-                      map
-                      polyline
-                      (.-latLng event))))))
+                     path-component
+                     map
+                     polyline
+                     (.-latLng event))))))
 
 (om/defui WaypointCreationMap
   Object
   (componentDidMount
    [this]
-   (draw-waypoint-creation))
+   (draw-waypoint-creation-map (om/props this)))
   (render
    [this]
    (sablono/html div)))

@@ -32,9 +32,24 @@
   {:value {:keys [:page]}
    :action #(swap! state assoc :page page)})
 
+(defmethod mutate 'add-waypoint-path
+  [{:keys [state]} key {:keys [path]}]
+  {:value {:keys [:waypoint-paths]}
+   :action #(swap! state update :waypoint-paths (fn [paths] (into [path] paths)))})
+
+(defn filter-out-path [paths id]
+  (filterv
+   (fn [path] (not= (path :id) id))
+   paths))
+
+(defmethod mutate 'delete-waypoint-path
+  [{:keys [state]} key {:keys [path-id]}]
+  {:value {:keys [:waypoint-paths]}
+   :action #(swap! state update :waypoint-paths filter-out-path path-id)})
+
 (defmethod mutate :default
   [env key params]
-  {:action #(println "Bad mutation")})
+  {:action #(println "Bad mutation" key params)})
 
 (defn on-error
   [_]
@@ -66,6 +81,8 @@
 
 (defn mount-root []
   (om/add-root! reconciler pages/View (.getElementById js/document "app")))
+
+;(om/remove-root! reconciler)
 
 (defn init! []
   (mount-root))

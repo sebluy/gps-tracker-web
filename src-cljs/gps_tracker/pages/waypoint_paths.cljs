@@ -17,10 +17,9 @@
     [:div.jumbotron [:h1.text-center "Pending..."]]))
 
 (defn new-button []
-  [:input.btn.btn-primary
-   {:type     "button"
-    :value    "New Waypoint"
-    #_:on-click #_handlers/create-waypoint-path}])
+  [:a.btn.btn-primary
+   {:href (routing/page->href {:id :new-waypoint-path})}
+   "New Waypoint"])
 
 (om/defui View
   static om/IQuery

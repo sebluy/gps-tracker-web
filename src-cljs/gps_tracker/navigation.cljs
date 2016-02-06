@@ -22,7 +22,7 @@
 ;(defn navigate [page]
 ;  (db/transition (fn [db] (assoc db :page (seed-page page db)))))
 
-(defn redirect [page]
+#_(defn redirect [page]
   (navigate page)
   (history/replace-token page))
 

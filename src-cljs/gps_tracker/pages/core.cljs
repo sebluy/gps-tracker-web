@@ -16,9 +16,19 @@
                :waypoint-path waypoint-path/view
                :new-waypoint-path new-waypoint-path/view})
 
-(defn current-view [props]
-  (if-let [view (view-map (get-in props [:page :id]))]
-    (view props)
+(defn add-path [c path]
+  (om/transact! c `[(~'add-waypoint-path {:path ~path})]))
+
+(defn delete-path [c path-id]
+  (om/transact! c `[(~'delete-waypoint-path {:path-id ~path-id})]))
+
+(defn current-view [c props]
+  (case (get-in props [:page :id])
+    :waypoint-paths (waypoint-paths/view props)
+    :waypoint-path (waypoint-path/view
+                    (om/computed props {:delete-path-fn (partial delete-path c)}))
+    :new-waypoint-path (new-waypoint-path/view
+                        (om/computed props {:add-path-fn (partial add-path c)}))
     (html/html [:div "Page not found"])))
 
 (om/defui View
@@ -49,10 +59,6 @@
       [:div.row
        [:div.span12
         (navbar/navbar)
-        (current-view (om/props this))]]]])))
-
-
-
-
+        (current-view this (om/props this))]]]])))
 
 ;(-> (om/class->any gps-tracker.core/reconciler View) (.navigate :waypoint-path))
