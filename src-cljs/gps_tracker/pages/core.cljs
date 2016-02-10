@@ -17,10 +17,12 @@
                :new-waypoint-path new-waypoint-path/view})
 
 (defn add-path [c path]
-  (om/transact! c `[(~'add-waypoint-path {:path ~path})]))
+  (om/transact! c `[(~'add-waypoint-path {:path ~path})
+                    (~'set-page {:page {:id :waypoint-paths}})]))
 
 (defn delete-path [c path-id]
-  (om/transact! c `[(~'delete-waypoint-path {:path-id ~path-id})]))
+  (om/transact! c `[(~'delete-waypoint-path {:path-id ~path-id})
+                    (~'set-page {:page {:id :waypoint-paths}})]))
 
 (defn current-view [c props]
   (case (get-in props [:page :id])

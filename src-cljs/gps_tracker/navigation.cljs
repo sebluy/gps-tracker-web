@@ -24,12 +24,12 @@
 
 #_(defn redirect [page]
   (navigate page)
-  (history/replace-token page))
+  (history/replace-page page))
 
 (defn- initialize-route [on-navigate]
   (let [history-token (history/get-token)]
     (if (string/blank? history-token)
-      (history/replace-token default-page)
+      (history/replace-page default-page)
       (on-navigate (routing/route->page history-token)))))
 
 (defn unhook-browser

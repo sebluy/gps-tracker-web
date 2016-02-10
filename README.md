@@ -6,6 +6,9 @@ load env/dev/clj/gps_tracker/env.clj
 Todo:
 
 Switch to om.next
+- Fix redirect on transactions
+- Fix routing params nil crap
+- Add server support
 
 Handle errors
 - on remote errors revert to last known state

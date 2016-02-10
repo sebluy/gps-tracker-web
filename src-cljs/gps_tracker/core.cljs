@@ -1,12 +1,8 @@
 (ns gps-tracker.core
-  (:require [reagent.core :as reagent]
-            [om.next :as om]
-            [om.dom :as dom]
+  (:require [om.next :as om]
             [ajax.core :as ajax]
-            [gps-tracker.subs]
-            [gps-tracker.db :as db]
             [gps-tracker.pages.core :as pages]
-            [gps-tracker.navigation :as navigation]))
+            [gps-tracker.history :as history]))
 
 (def initial-state {:page {:id :waypoint-paths}})
 
@@ -30,11 +26,14 @@
 (defmethod mutate 'set-page
   [{:keys [state]} key {:keys [page]}]
   {:value {:keys [:page]}
-   :action #(swap! state assoc :page page)})
+   :action (fn []
+             (history/replace-page page)
+             (swap! state assoc :page page))})
 
 (defmethod mutate 'add-waypoint-path
   [{:keys [state]} key {:keys [path]}]
   {:value {:keys [:waypoint-paths]}
+   :remote true
    :action #(swap! state update :waypoint-paths (fn [paths] (into [path] paths)))})
 
 (defn filter-out-path [paths id]
@@ -45,6 +44,7 @@
 (defmethod mutate 'delete-waypoint-path
   [{:keys [state]} key {:keys [path-id]}]
   {:value {:keys [:waypoint-paths]}
+   :remote true
    :action #(swap! state update :waypoint-paths filter-out-path path-id)})
 
 (defmethod mutate :default
@@ -65,13 +65,36 @@
      :format          :edn
      :response-format :edn}))
 
-(defn send
-  [query callback]
-  (println "Sending " query)
+(defn remote-waypoint-paths [callback]
   (post-actions [{:action :get-paths
                   :path-type :waypoint}]
                 (fn [results]
                   (callback {:waypoint-paths (first results)}))))
+
+(defn remote-add-waypoint-path [params]
+  (post-actions [{:action :add-path
+                  :path-type :waypoint
+                  :path (params :path)}]
+                identity))
+
+(defn remote-delete-waypoint-path [params]
+  (post-actions [{:action :delete-path
+                  :path-type :waypoint
+                  :path-id (params :path-id)}]
+                identity))
+
+(defn send
+  [query callback]
+  (let [{:keys [remote]} query]
+    (let [ast (om/query->ast query)
+          sub-query (into #{} (-> ast :children first :key second))
+          {:keys [children]} (om/query->ast sub-query)]
+      (doseq [child children]
+        (case (child :dispatch-key)
+          :waypoint-paths (remote-waypoint-paths callback)
+          add-waypoint-path (remote-add-waypoint-path (child :params))
+          delete-waypoint-path (remote-delete-waypoint-path (child :params))
+          (println "Bad remote query"))))))
 
 (def parser (om/parser {:read read :mutate mutate}))
 

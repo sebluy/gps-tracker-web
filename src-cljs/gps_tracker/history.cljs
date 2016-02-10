@@ -4,7 +4,7 @@
 
 (defonce history (History.))
 
-(defn replace-token [page]
+(defn replace-page [page]
   (.replaceToken history (routing/page->route page)))
 
 (defn get-token []
