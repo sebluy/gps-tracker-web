@@ -1,6 +1,7 @@
 (ns gps-tracker.core
   (:require [om.next :as om]
             [ajax.core :as ajax]
+            [gps-tracker.remote-parser :as remote]
             [gps-tracker.pages.core :as pages]
             [gps-tracker.history :as history]))
 
@@ -83,23 +84,10 @@
                   :path-id (params :path-id)}]
                 identity))
 
-(defn send
-  [query callback]
-  (let [{:keys [remote]} query]
-    (let [ast (om/query->ast query)
-          sub-query (into #{} (-> ast :children first :key second))
-          {:keys [children]} (om/query->ast sub-query)]
-      (doseq [child children]
-        (case (child :dispatch-key)
-          :waypoint-paths (remote-waypoint-paths callback)
-          add-waypoint-path (remote-add-waypoint-path (child :params))
-          delete-waypoint-path (remote-delete-waypoint-path (child :params))
-          (println "Bad remote query"))))))
-
 (def parser (om/parser {:read read :mutate mutate}))
 
 (def reconciler (om/reconciler {:state initial-state
-                                :send send
+                                :send remote/send
                                 :parser parser}))
 
 (defn mount-root []
