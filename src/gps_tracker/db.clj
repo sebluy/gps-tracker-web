@@ -20,9 +20,9 @@
 
 (def db-spec (or (System/getenv "DATABASE_URL")
                  {:subprotocol "postgresql"
-                  :subname     "//localhost/gpstracker"
-                  :user        "dev"
-                  :password    "dev"}))
+                  :subname "//localhost/gpstracker"
+                  :user "dev"
+                  :password "dev"}))
 
 ;;;; maybe instead of using dynamic transaction, build (monad?) string of
 ;;;; functions that are later threaded with transaction

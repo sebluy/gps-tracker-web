@@ -26,7 +26,7 @@
    [this]
    (let [{:keys [waypoint-paths page]} (om/props this)
          {:keys [delete-path-fn]} (om/get-computed this)
-         path-id (get-in page [:params :path-id])
+         {:keys [path-id]} page
          path (find-path waypoint-paths path-id)]
      (sablano/html
       (if (nil? path)

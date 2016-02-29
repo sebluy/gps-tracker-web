@@ -37,7 +37,8 @@
   :plugins [[lein-environ "1.0.0"]
             [lein-ancient "0.6.7"]
             [lein-figwheel "0.5.0-4"]
-            [lein-cljsbuild "1.0.6"]]
+            [lein-cljsbuild "1.0.6"]
+            [cider/cider-nrepl "0.11.0-SNAPSHOT"]]
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 

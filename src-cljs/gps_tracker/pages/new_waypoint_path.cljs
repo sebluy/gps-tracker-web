@@ -1,8 +1,7 @@
 (ns gps-tracker.pages.new-waypoint-path
   (:require [gps-tracker.map :as map]
             [sablono.core :as sablono]
-            [om.next :as om]
-            [gps-tracker.handlers :as handlers]))
+            [om.next :as om]))
 
 ;; this distance code could probably live somewhere else
 (defn point->latlng [point]

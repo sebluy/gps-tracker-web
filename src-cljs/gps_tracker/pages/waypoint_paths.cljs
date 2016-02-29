@@ -1,6 +1,5 @@
 (ns gps-tracker.pages.waypoint-paths
-  (:require [gps-tracker.handlers :as handlers]
-            [sablono.core :as sablono]
+  (:require [sablono.core :as sablono]
             [om.next :as om]
             [gps-tracker.routing :as routing]))
 
@@ -8,7 +7,7 @@
   [:li
    {:key id}
    [:a.btn.btn-primary
-    {:href (routing/page->href {:id :waypoint-path :params {:path-id id}})}
+    {:href (routing/page->href {:id :waypoint-path :path-id id})}
     (.toLocaleString id)]])
 
 (defn waypoint-path-list [paths]

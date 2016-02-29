@@ -1,6 +1,5 @@
 (ns gps-tracker.map
   (:require [goog.dom :as dom]
-            [gps-tracker.handlers :as handlers]
             [om.next :as om]
             [sablono.core :as sablono]))
 

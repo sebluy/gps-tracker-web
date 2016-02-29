@@ -3,9 +3,9 @@
             [clojure.set :as s])
   (:import [goog Uri]))
 
-(def routes ["" {"waypoint-paths" :waypoint-paths
-                 "waypoint-path/" {"new" :new-waypoint-path
-                                   [:path-id] :waypoint-path}}])
+(def routes ["" {(bidi/alts "waypoint-paths/index" "") :waypoint-paths
+                 "waypoint-paths/" {"new" :new-waypoint-path
+                                    "show/" {[:path-id] :waypoint-path}}}])
 
 ;; todo: integrate schema here
 
@@ -18,7 +18,7 @@
   :id)
 
 (defmethod page->routeable :waypoint-path [page]
-  (update-in page [:params :path-id] #(.getTime %)))
+  (update page :path-id #(.getTime %)))
 
 (defmethod page->routeable :default [page] page)
 
@@ -27,16 +27,18 @@
   :id)
 
 (defmethod routeable->page :waypoint-path [routeable]
-  (update-in routeable [:params :path-id] #(js/Date. (long %))))
+  (update routeable :path-id #(js/Date. (long %))))
 
 (defmethod routeable->page :default [routeable] routeable)
 
 (defn- route->routeable [route]
   (let [{:keys [handler route-params]} (bidi/match-route routes route)]
-    {:id handler :params route-params}))
+    (assoc route-params :id (or handler :not-found))))
 
-(defn- routeable->route [{:keys [id params]}]
-  (apply bidi/path-for routes id (-> params seq flatten)))
+(defn- routeable->route [routeable]
+  (let [id (routeable :id)
+        params (dissoc routeable :id)]
+    (apply bidi/path-for routes id (-> params seq flatten))))
 
 (defn page->route [page] (-> page page->routeable routeable->route))
 (defn route->page [route] (-> route route->routeable routeable->page))
