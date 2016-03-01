@@ -21,15 +21,17 @@
 
 (defn make-polyline [coordinates]
   (google.maps.Polyline.
-    (clj->js (merge {:path coordinates} path-options))))
+   (clj->js (merge {:path coordinates} path-options))))
 
-(defn make-google-map [center]
-  (google.maps.Map. (get-canvas) (clj->js {:center center
-                                           :zoom 1
-                                           :mapTypeId google.maps.MapTypeId.HYBRID})))
+(defn make-google-map [target center]
+  (println "Making google map")
+  (js/console.log target)
+  (google.maps.Map. target (clj->js {:center center
+                                     :zoom 1
+                                     :mapTypeId google.maps.MapTypeId.HYBRID})))
 
-(defn make-bounded-google-map [bounds]
-  (doto (make-google-map (.getCenter bounds))
+(defn make-bounded-google-map [target bounds]
+  (doto (make-google-map target (.getCenter bounds))
     (.fitBounds bounds)
     (.panToBounds bounds)))
 
@@ -52,23 +54,28 @@
   (doseq [point path]
     (draw-marker map (point->latlng point))))
 
-(defn draw-map-with-path [path]
+(defn draw-map-with-path [target path]
   (let [latlngs (path->latlngs path)
         bounds (make-bounds latlngs)
-        map (make-bounded-google-map bounds)
+        map (make-bounded-google-map target bounds)
         poly (make-polyline latlngs)]
     (add-markers map path)
     (.setMap poly map)))
+
+(defn with-valid-target [target f]
+  (when target
+    (f target)))
 
 (om/defui ViewingMap
   Object
   (componentDidMount
    [this]
-   (let [path (om/props this)]
-     (draw-map-with-path path)))
+   (draw-map-with-path (om/get-state this) (om/props this)))
   (render
    [this]
-   (sablono/html div)))
+   (sablono/html [:div {:style {:height "100%"}
+                        :ref (fn [target]
+                               (om/set-state! this target))}])))
 
 (def viewing-map (om/factory ViewingMap))
 
@@ -78,14 +85,14 @@
   (om/update-state! component update :points conj (latlng->point latlng)))
 
 (defn draw-waypoint-creation-map
-  [path-component]
-  (let [map (make-google-map (point->latlng {:latitude 0.0 :longtiude 0.0}))
+  [target component]
+  (let [map (make-google-map target (point->latlng {:latitude 0.0 :longtiude 0.0}))
         polyline (make-polyline [])]
     (.setMap polyline map)
     (.addListener map "click"
                   (fn [event]
                     (add-latlng-to-waypoint-path
-                     path-component
+                     component
                      map
                      polyline
                      (.-latLng event))))))
@@ -94,9 +101,11 @@
   Object
   (componentDidMount
    [this]
-   (draw-waypoint-creation-map (om/props this)))
+   (draw-waypoint-creation-map (om/get-state this) this))
   (render
    [this]
-   (sablono/html div)))
+   (sablono/html [:div {:style {:height "100%"}
+                        :ref (fn [target]
+                               (om/set-state! this target))}])))
 
 (def waypoint-creation-map (om/factory WaypointCreationMap))

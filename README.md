@@ -5,39 +5,32 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
+Connect pending circle to asyncronous operations.
+
 Switch to om.next
-- Rethink page structure
+- Rethink page structure (rails?)
 - Add server side parsing
+- Explore remote data store lifecycle
 
 Handle errors
 - on remote errors revert to last known state
 - on read, add fail callback
 
-Look into history/navigation (especially on page load)
-
-Fix figwheel repl
+Fix figwheel repl ???
 
 Start using public/private in namespaces with better discipline.
+
+Extract "pattern" for ref and onComponentMount imperative stuff
 
 Use lein heroku for uberjar deployment.
 
 Don't allow a empty path to be uploaded.
 
-Show pending circle for asyncronous (remote) operations.
-
 Add authentication/authorization.
 
 Bring libraries up to date.
 
-Remove paredit from emacs.
-
-Rename db to state.
-
-Rewrite handlers to only make one final swap! on db.
-
 Add tests.
-
-Add distance between each waypoint to waypoint creation map.
 
 Allow waypoints to be moved on waypoint creation map.
 

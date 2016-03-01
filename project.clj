@@ -10,13 +10,14 @@
                  [org.omcljs/om "1.0.0-alpha30"]
                  [sablono "0.5.3"]
                  [cljsjs/react-dom-server "0.14.3-0"]
+                 [cljsjs/google-maps "3.18-1"]
+                 [cljsjs/spin "2.3.2-0"]
                  [bidi "1.20.3"]
                  [cljs-ajax "0.3.14"]
                  [environ "1.0.0"]
                  [hiccup "1.0.5"]
                  [reagent "0.5.0"]
                  [compojure "1.4.0"]
-                 [cljsjs/google-maps "3.18-1"]
                  [ring/ring-jetty-adapter "1.4.0"]
                  [ring/ring-defaults "0.1.5"]
                  [ring-middleware-format "0.5.0"]
@@ -44,10 +45,10 @@
 
   :cljsbuild
   {:builds {:app {:source-paths ["src-cljs"]
-                  :compiler     {:output-to     "resources/public/js/app.js"
-                                 :output-dir    "resources/public/js/out"
+                  :compiler     {:output-to "resources/public/js/app.js"
+                                 :output-dir "resources/public/js/out"
                                  :main "gps-tracker.env"
-                                 :asset-path    "js/out"
+                                 :asset-path "js/out"
                                  :optimizations :none
                                  :pretty-print  true}}}}
 
