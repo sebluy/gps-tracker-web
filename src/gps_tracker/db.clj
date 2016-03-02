@@ -168,6 +168,7 @@
 
 (defn execute-api-actions [actions]
   "Executes all actions in a transaction and returns results in a list."
+  (Thread/sleep 1000)
   (try
     (jdbc/with-db-transaction
       [transaction db-spec]

@@ -24,8 +24,6 @@
    (clj->js (merge {:path coordinates} path-options))))
 
 (defn make-google-map [target center]
-  (println "Making google map")
-  (js/console.log target)
   (google.maps.Map. target (clj->js {:center center
                                      :zoom 1
                                      :mapTypeId google.maps.MapTypeId.HYBRID})))
@@ -101,7 +99,7 @@
   Object
   (componentDidMount
    [this]
-   (draw-waypoint-creation-map (om/get-state this) this))
+   (draw-waypoint-creation-map (om/get-state this) (om/props this)))
   (render
    [this]
    (sablono/html [:div {:style {:height "100%"}

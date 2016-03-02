@@ -11,7 +11,6 @@
                           :left "90%"})
 
 (defn spin [c options]
-  (println "Spinning")
   (doto (js/Spinner. options)
     (.spin c)))
 
@@ -26,7 +25,7 @@
 
 (def spinner (om/factory Spinner))
 
-(defn navbar []
+(defn navbar [state]
   (sablono/html
    [:div.navbar.navbar-inverse.navbar-fixed-top
     [:div.container
@@ -37,4 +36,5 @@
        [:a
         {:href (routing/page->href {:id :waypoint-paths})}
         "Waypoint Paths"]]]
-     (spinner spinner-options)]]))
+     (when (not= (state :remotes) 0)
+       (spinner spinner-options))]]))

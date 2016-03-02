@@ -6,12 +6,13 @@
             [gps-tracker.history :as history]))
 
 (defn initial-state []
-  {:page (history/get-page)})
+  {:page (history/get-page)
+   :remotes 0})
 
 (defmulti read om/dispatch)
 
 (defmethod read :waypoint-paths
-  [{:keys [state]} key params]
+  [{:keys [state ast]} key params]
   (if-let [paths (@state :waypoint-paths)]
     {:value paths}
     {:value :pending
@@ -31,6 +32,12 @@
    :action (fn []
              (history/set-page page)
              (swap! state assoc :page page))})
+
+(defmethod mutate 'inc-remotes
+  [{:keys [state]} key params]
+  {:value {:keys [:remotes]}
+   :action (fn []
+             (swap! state update :remotes inc))})
 
 (defmethod mutate 'add-waypoint-path
   [{:keys [state]} key {:keys [path]}]
@@ -55,9 +62,11 @@
 
 (def parser (om/parser {:read read :mutate mutate}))
 
-(def reconciler (om/reconciler {:state (initial-state)
-                                :send remote/send
-                                :parser parser}))
+(def reconciler
+  (let [state (atom (initial-state))]
+    (om/reconciler {:state state
+                    :send (fn [query callback] (remote/send query callback state))
+                    :parser parser})))
 
 (defn mount-root []
   (om/add-root! reconciler pages/View (.getElementById js/document "app")))

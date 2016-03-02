@@ -35,7 +35,7 @@
   (query
    [this]
    (into
-    [:page]
+    [:page :remotes]
     (concat
      (om/get-query waypoint-paths/View)
      (om/get-query waypoint-path/View))))
@@ -48,12 +48,13 @@
    (history/unhook-browser))
   (render
    [this]
+   (println (om/props this))
    (html/html
     [:div
      [:div.container
       [:div.row
        [:div.span12
-        (navbar/navbar)
+        (navbar/navbar (om/props this))
         (current-view this (om/props this))]]]])))
 
 ;(-> (om/class->any gps-tracker.core/reconciler View) (om/props) :page)

@@ -5,7 +5,7 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
-Connect pending circle to asyncronous operations.
+Refactor remote-query
 
 Switch to om.next
 - Rethink page structure (rails?)

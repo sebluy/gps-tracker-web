@@ -2,7 +2,6 @@
   (:require [om.next :as om]
             [ajax.core :as ajax]))
 
-
 (defn on-error
   [_]
   (js/alert "Remote error... You may need to refresh the page."))
@@ -27,31 +26,38 @@
                   (callback {:waypoint-paths (first results)}))))
 
 (defmethod read :default
-  [env key params]
+  [{:keys [callback]} key params]
+  (callback nil)
   (println "Bad remote read"))
 
 (defmulti mutate om/dispatch)
 
 (defmethod mutate 'add-waypoint-path
-  [env key {:keys [path]}]
-  {:action #(post-actions [{:action :add-path
-                           :path-type :waypoint
-                           :path path}]
-                          identity)})
+  [{:keys [callback]} key {:keys [path]}]
+  {:action (fn [] (post-actions [{:action :add-path
+                                  :path-type :waypoint
+                                  :path path}]
+                                #(callback nil)))})
 
 (defmethod mutate 'delete-waypoint-path
-  [env key {:keys [path-id]}]
-  {:action #(post-actions [{:action :delete-path
-                            :path-type :waypoint
-                            :path-id path-id}]
-                          identity)})
+  [{:keys [callback]} key {:keys [path-id]}]
+  {:action (fn [] (post-actions [{:action :delete-path
+                                  :path-type :waypoint
+                                  :path-id path-id}]
+                                #(callback nil)))})
 
 (defmethod mutate :default
-  [env key params]
-  {:action #(println "Bad mutation" key params)})
+  [{:keys [callback]} key params]
+  {:action (fn []
+             (callback nil)
+             (println "Bad mutation" key params))})
 
 (def parser (om/parser {:read read :mutate mutate}))
 
 (defn send
-  [query callback]
-  (parser {:callback callback} (-> (query :remote) set vec)))
+  [query callback state]
+  (om/transact! gps-tracker.core.reconciler `[(~'inc-remotes) :remotes])
+  (let [callback2 (fn [result]
+                    (callback (merge {:remotes (dec (@state :remotes))}
+                                            result)))]
+    (parser {:callback callback2} (-> (query :remote) set vec))))
