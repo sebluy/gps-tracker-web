@@ -1,105 +1,70 @@
 (ns gps-tracker.remote
-  (:require [cljs.core.async :as async]
-            [cljs.pprint :as pp]
-            [ajax.core :as ajax]
-            [gps-tracker.db :as db]
-            [gps-tracker.util :as util]))
+  (:require [om.next :as om]
+            [ajax.core :as ajax]))
 
-; Main purpose is to enforce strict in-order processing of remote api requests.
-; If a request is in flight, any further requests will be queued and sent one
-; at a time.
-; The server will recieve api requests in the order they are put on the queued.
-; The same is true for the ordering of the callback calls on request return.
+(defn on-error
+  [_]
+  (js/alert "Remote error... You may need to refresh the page."))
 
-(declare on-success)
-(declare on-error)
-
-(defn post-actions [actions]
+(defn post-actions
+  [actions callback]
   (ajax/POST
-    "/api"
+   "/api"
     {:params          actions
-     :handler         on-success
-     :error-handler   on-error
+     :handler         #(callback :success %)
+     :error-handler   #(callback :error %)
      :format          :edn
      :response-format :edn}))
 
-(defn queue-action
-  "Adds an action to the queue of remote actions. If the queue is currently
-   empty, then the action is sent immediately."
-  [action-handler]
-  (if (empty? (db/base-query [:remote :action-queue]))
-    (do (post-actions [(action-handler :action)])
-        (db/transition
-         (fn [db]
-           (assoc-in db [:remote :action-queue] #queue [action-handler]))))
-    (db/transition
-     (fn [db] (update-in db [:remote :action-queue] conj action-handler)))))
+(defmulti read om/dispatch)
 
-(defn post-next
-  "Posts next action if there is one, otherwise does nothing."
-  []
-  (if-let [next (first (db/base-query [:remote :action-queue]))]
-    (post-actions [(next :action)])))
+(defmethod read :waypoint-paths
+  [{:keys [callback]} key params]
+  (post-actions [{:action :get-paths
+                  :path-type :waypoint}]
+                (fn [results]
+                  (callback {:waypoint-paths (first results)}))))
 
-(defn on-success
-  "Passes the response on to the callback associated to the action handler,
-   then pops the current action and starts sending the next action
-   if there are any."
-  [response]
-  (let [current (first (db/base-query [:remote :action-queue]))]
-    (db/transition (fn [db] (update-in db [:remote :action-queue] pop)))
-    ((current :callback) (first response)))
-  (post-next))
+(defmethod read :default
+  [{:keys [callback]} key params]
+  (callback nil)
+  (println "Bad remote read"))
 
-(defn on-error
-  "Stub for now... Just display an error, clear the action queue
-   and tell the user to refresh."
-  [_]
-  (js/alert "Remote error... You may need to refresh the page.")
-  (db/transition (fn [db] (assoc-in db [:remote :action-queue] []))))
+(defmulti mutate om/dispatch)
 
-(defn post-action
-  "Takes an action to send and a callback to be called on response.
-   Captures the current state to be rolled back to on error."
-  ([action] (post-action action identity))
-  ([action callback]
-   (queue-action {:action action :callback callback :state (db/base-query)})))
+(defmethod mutate 'add-waypoint-path
+  [{:keys [callback]} key {:keys [path]}]
+  {:action (fn [] (post-actions [{:action :add-path
+                                  :path-type :waypoint
+                                  :path path}]
+                                #(callback nil)))})
 
-;; application specific code
+(defmethod mutate 'delete-waypoint-path
+  [{:keys [callback]} key {:keys [path-id]}]
+  {:action (fn [] (post-actions [{:action :delete-path
+                                  :path-type :waypoint
+                                  :path-id path-id}]
+                                #(callback nil)))})
 
-(defn get-waypoint-paths []
-  (db/transition
-    (fn [db] (assoc-in db [:remote :waypoint-paths] :pending)))
-  (post-action
-   {:action :get-paths
-    :path-type :waypoint}
-   (fn [paths]
-     (db/transition
-      (fn [db]
-        (assoc-in db [:remote :waypoint-paths] paths))))))
+(defmethod mutate :default
+  [{:keys [callback]} key params]
+  {:action (fn []
+             (callback nil)
+             (println "Bad mutation" key params))})
 
-(defn remove-waypoint-paths []
-  (db/transition (fn [db] (util/dissoc-in db [:remote :waypoint-paths]))))
+(def parser (om/parser {:read read :mutate mutate}))
 
-(defn filter-out-path [paths id]
-  (filterv
-   (fn [path] (not= (path :id) id))
-   paths))
+(defn make-callback [om-callback state]
+  (fn [status response]
+    (let [new-remotes {:remotes (dec (@state :remotes))}]
+      (om-callback (if (= status :success)
+                     (merge new-remotes response)
+                     ;; add error condition
+                     new-remotes)))))
 
-(defn remove-waypoint-path [id]
-  (db/transition
-   (fn [db] (update-in db [:remote :waypoint-paths] filter-out-path id))))
-
-(defn upload-waypoint-path [path]
-  (post-action {:action :add-path
-                :path-type :waypoint
-                :path path}))
-
-(defn delete-path [id]
-  (post-action [:delete-path id]))
-
-(defn delete-waypoint-path [id]
-  (remove-waypoint-path id)
-  (post-action {:action :delete-path
-                :path-type :waypoint
-                :path-id id}))
+(defn send
+  [query om-callback]
+  (let [reconciler gps-tracker.core.reconciler
+        state (om/app-state reconciler)]
+    (om/transact! reconciler `[(~'inc-remotes) :remotes])
+    (parser {:callback (make-callback om-callback state)} (-> (query :remote) set vec))))

@@ -1,7 +1,7 @@
 (ns gps-tracker.core
   (:require [om.next :as om]
             [ajax.core :as ajax]
-            [gps-tracker.remote-parser :as remote]
+            [gps-tracker.remote :as remote]
             [gps-tracker.pages.core :as pages]
             [gps-tracker.history :as history]))
 
@@ -65,7 +65,7 @@
 (def reconciler
   (let [state (atom (initial-state))]
     (om/reconciler {:state state
-                    :send (fn [query callback] (remote/send query callback state))
+                    :send remote/send
                     :parser parser})))
 
 (defn mount-root []
