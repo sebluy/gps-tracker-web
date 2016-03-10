@@ -21,7 +21,7 @@
 
 (defn new-button [address state]
   [:a.btn.btn-primary
-   {:onClick #(address [:set-page {:id :new-waypoint-path}])}
+   {:onClick #(address '(:navigate {:id :new-waypoint-path}))}
    "New Waypoint"])
 
 (defn view [address state]

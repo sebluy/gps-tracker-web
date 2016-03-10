@@ -1,6 +1,7 @@
 (ns gps-tracker.pages.new-waypoint-path
   (:require [gps-tracker.map :as map]
-            [sablono.core :as sablono]))
+            [gps-tracker.address :as a]
+            [sablono.core :as s]))
 
 (defn upload-button [on-click]
   [:input.btn.btn-primary
@@ -8,14 +9,21 @@
     :value "Upload"
     :on-click on-click}])
 
+(defn handle [action page]
+  (case (first action)
+    :add-point
+    (update-in page [:path :points] conj (second action))
+
+    page))
+
 (defn view [address state]
-  (sablono/html
+  (s/html
    [:div
     [:div.page-header
      [:h1 "New Waypoint"
       [:p.pull-right.btn-toolbar
        (upload-button identity)]]]
-    [:div.col-md-8 "Map goes here" #_(map/waypoint-creation-map)]
+    [:div.col-md-8 (map/WaypointCreationMap address)]
     [:div.col-md-2 "Segment list goes here"
      #_[:h1 (str "Count: " (count (path :points)))]
      #_(segment-distance-list path)]]))

@@ -1,16 +1,43 @@
 (ns gps-tracker.pages.core
   (:require [sablono.core :as s]
+            [gps-tracker.address :as a]
             [gps-tracker.history :as history]
             [gps-tracker.pages.navbar :as navbar]
             [gps-tracker.pages.waypoint-paths :as waypoint-paths]
             [gps-tracker.pages.new-waypoint-path :as new-waypoint-path]
             [gps-tracker.pages.waypoint-path :as waypoint-path]))
 
-(defn current-page [address state]
-  (case (get-in state [:page :id])
-    :waypoint-paths (waypoint-paths/view address state)
+(defn init [page]
+  (case (page :id)
+    :new-waypoint-path
+    (assoc page :path {:id (js/Date.) :points []})
+
+    page))
+
+(defn handle [action page]
+  (case (first action)
+    :navigate
+    (init (second action))
+
+    :new-waypoint-path
+    (new-waypoint-path/handle (rest action) page)
+
+    page))
+
+#_(->> {:path {:points []}}
+     (handle '(:new-waypoint-path :add-point {:latitude 1 :longitude 2}))
+     (handle '(:new-waypoint-path :add-point {:latitude 4 :longitude 3})))
+
+(defn current-page [address page]
+  (case (page :id)
+    :waypoint-paths
+    (waypoint-paths/view address page)
+
     ;; :waypoint-path (waypoint-path/view state)
-    :new-waypoint-path (new-waypoint-path/view address state)
+
+    :new-waypoint-path
+    (new-waypoint-path/view (a/forward address (a/tag :new-waypoint-path)) page)
+
     (s/html [:div "Page not found"])))
 
 (defn view [address state]
@@ -20,7 +47,7 @@
      [:div.row
       [:div.span12
        (navbar/view address state)
-       (current-page address state)]]]]))
+       (current-page (a/forward address (a/tag :page)) (state :page))]]]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (defn add-path [c path]                                                            ;;

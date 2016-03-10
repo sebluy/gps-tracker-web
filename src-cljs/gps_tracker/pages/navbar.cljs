@@ -12,7 +12,7 @@
      [:ul.nav.navbar-nav
       [:li
        [:a
-        {:onClick #(address [:set-page {:id :waypoint-paths}])}
+        {:onClick #(address '(:page :navigate {:id :waypoint-paths}))}
         "Waypoint Paths"]]]]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -2,28 +2,37 @@
   (:require [quiescent.core :as q]
             [quiescent.dom :as d]
             [ajax.core :as ajax]
+            [cljs.pprint :as pp]
             [gps-tracker.remote :as remote]
             [gps-tracker.pages.core :as p]
             [gps-tracker.history :as history]))
 
-(defn update [action state]
+(def state (atom nil))
+
+(defn handle [action state]
   (case (first action)
-    :set-page
-    (assoc-in state [:page] (second action))
+    :init
+    {:page {:id :waypoint-paths}}
+
+    :page
+    (update state :page (partial p/handle (rest action)))
 
     state))
 
+(declare render)
+
+(defn address [action]
+  (pp/pprint action)
+  (swap! state (partial handle action))
+  (pp/pprint @state)
+  (render @state))
+
 (defn render [state]
-  (q/render (p/view (fn [action]
-                      (render (update action state)))
-                    state)
+  (q/render (p/view address state)
             (.getElementById js/document "app")))
 
-(defn mount-root [state]
-  (render state))
-
 (defn init! []
-  (mount-root {:page {:id :waypoint-paths}}))
+  (address '(:init)))
 
 ;; OM Next --------------
 

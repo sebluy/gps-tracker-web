@@ -8,6 +8,8 @@ Todo:
 Switch to quiescent
 - Rethink page structure (rails?)
 
+Should address be global or local (and get updated i.e. map)
+
 Handle errors
 - on remote errors revert to last known state
 - on read, add fail callback
