@@ -5,18 +5,16 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
-Refactor remote-query
-
-Switch to om.next
+Switch to quiescent
 - Rethink page structure (rails?)
-- Add server side parsing
-- Explore remote data store lifecycle
 
 Handle errors
 - on remote errors revert to last known state
 - on read, add fail callback
 
 Fix figwheel repl ???
+
+Cleanup project.clj
 
 Start using public/private in namespaces with better discipline.
 

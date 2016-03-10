@@ -1,6 +1,5 @@
 (ns gps-tracker.pages.waypoint-paths
-  (:require [sablono.core :as sablono]
-            [om.next :as om]
+  (:require [sablono.core :as s]
             [gps-tracker.routing :as routing]))
 
 (defn show [{:keys [id]}]
@@ -11,29 +10,25 @@
     (.toLocaleString id)]])
 
 (defn waypoint-path-list [paths]
-  (if-not (= paths :pending)
-    [:ul (map show paths)]
-    [:div.jumbotron [:h1.text-center "Pending..."]]))
+  (case paths
+    :pending
+    [:div.jumbotron [:h1.text-center "Pending..."]]
 
-(defn new-button []
+    nil
+    [:div.jumbotron [:h1.text-center "No waypoint paths"]]
+
+    [:ul (map show paths)]))
+
+(defn new-button [address state]
   [:a.btn.btn-primary
-   {:href (routing/page->href {:id :new-waypoint-path})}
+   {:onClick #(address [:set-page {:id :new-waypoint-path}])}
    "New Waypoint"])
 
-(om/defui View
-  static om/IQuery
-  (query
-   [this]
-   [:waypoint-paths])
-  Object
-  (render
-   [this]
-   (sablono/html
-    [:div
-     [:div.page-header
-      [:h1 "Waypoint Paths"
-       [:p.pull-right.btn-toolbar
-        (new-button)]]]
-     (waypoint-path-list (-> this om/props :waypoint-paths))])))
-
-(def view (om/factory View))
+(defn view [address state]
+  (s/html
+   [:div
+    [:div.page-header
+     [:h1 "Waypoint Paths"
+      [:p.pull-right.btn-toolbar
+       (new-button address)]]]
+    (waypoint-path-list (state :waypoint-paths))]))
