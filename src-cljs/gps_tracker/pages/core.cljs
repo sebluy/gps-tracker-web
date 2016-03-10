@@ -24,14 +24,10 @@
 
     page))
 
-#_(->> {:path {:points []}}
-     (handle '(:new-waypoint-path :add-point {:latitude 1 :longitude 2}))
-     (handle '(:new-waypoint-path :add-point {:latitude 4 :longitude 3})))
-
-(defn current-page [address page]
+(defn current-page [address {:keys [:waypoint-paths :page]}]
   (case (page :id)
     :waypoint-paths
-    (waypoint-paths/view address page)
+    (waypoint-paths/view address waypoint-paths)
 
     ;; :waypoint-path (waypoint-path/view state)
 
@@ -47,7 +43,7 @@
      [:div.row
       [:div.span12
        (navbar/view address state)
-       (current-page (a/forward address (a/tag :page)) (state :page))]]]]))
+       (current-page (a/forward address (a/tag :page)) state)]]]]))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (defn add-path [c path]                                                            ;;

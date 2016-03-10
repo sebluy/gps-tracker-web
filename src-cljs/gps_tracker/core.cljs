@@ -9,13 +9,39 @@
 
 (def state (atom nil))
 
+(declare handle)
+
+(defn handle-waypoint-paths [action paths]
+  (case (first action)
+    :create
+    (conj paths (second action))
+
+    paths))
+
+(defn intercept-page-actions [action state]
+  (cond
+    (= (take 2 action) '(:new-waypoint-path :create))
+    (let [path (get-in state [:page :path])]
+      (->> state
+           (handle '(:page :navigate {:id :waypoint-paths}))
+           (handle `(:waypoint-paths :create ~path))))
+
+    :else
+    state))
+
 (defn handle [action state]
   (case (first action)
     :init
-    {:page {:id :waypoint-paths}}
+    {:page {:id :waypoint-paths}
+     :waypoint-paths []}
 
     :page
-    (update state :page (partial p/handle (rest action)))
+    (-> state
+        (update :page (partial p/handle (rest action)))
+        (->> (intercept-page-actions (rest action))))
+
+    :waypoint-paths
+    (update state :waypoint-paths (partial handle-waypoint-paths (rest action)))
 
     state))
 

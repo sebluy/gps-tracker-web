@@ -6,29 +6,28 @@
   [:li
    {:key id}
    [:a.btn.btn-primary
-    {:href (routing/page->href {:id :waypoint-path :path-id id})}
     (.toLocaleString id)]])
 
 (defn waypoint-path-list [paths]
-  (case paths
+  (condp = paths
     :pending
     [:div.jumbotron [:h1.text-center "Pending..."]]
 
-    nil
+    []
     [:div.jumbotron [:h1.text-center "No waypoint paths"]]
 
     [:ul (map show paths)]))
 
-(defn new-button [address state]
+(defn new-button [address]
   [:a.btn.btn-primary
    {:onClick #(address '(:navigate {:id :new-waypoint-path}))}
    "New Waypoint"])
 
-(defn view [address state]
+(defn view [address paths]
   (s/html
    [:div
     [:div.page-header
      [:h1 "Waypoint Paths"
       [:p.pull-right.btn-toolbar
        (new-button address)]]]
-    (waypoint-path-list (state :waypoint-paths))]))
+    (waypoint-path-list paths)]))
