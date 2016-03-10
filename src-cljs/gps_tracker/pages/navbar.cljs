@@ -1,10 +1,6 @@
-(ns gps-tracker.pages.navbar
-  (:require [gps-tracker.routing :as routing]
-            [sablono.core :as sablono]
-            cljsjs.spin))
+(ns gps-tracker.pages.navbar)
 
 (defn view [address state]
-  (sablono/html
    [:div.navbar.navbar-inverse.navbar-fixed-top
     [:div.container
      [:div.navbar-header
@@ -13,7 +9,7 @@
       [:li
        [:a
         {:onClick #(address '(:page :navigate {:id :waypoint-paths}))}
-        "Waypoint Paths"]]]]]))
+        "Waypoint Paths"]]]]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (def spinner-options #js {:color "#FFF"                                     ;;
