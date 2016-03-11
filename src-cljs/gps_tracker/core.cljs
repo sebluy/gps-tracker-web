@@ -13,9 +13,11 @@
   (cond
     (= (take 2 action) '(:new-waypoint-path :create))
     (let [path (nth action 2)]
-      (->> state
-           (handle '(:page :navigate {:id :waypoint-paths}))
-           (handle `(:waypoint-paths :create ~path))))
+      (cond-> state
+        (wp/valid? path)
+        (->>
+         (handle '(:page :navigate {:id :waypoint-paths}))
+         (handle `(:waypoint-paths :create ~path)))))
 
     (= (take 2 action) '(:waypoint-path :delete))
     (let [path-id (nth action 2)]

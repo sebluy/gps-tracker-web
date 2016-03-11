@@ -22,7 +22,7 @@
                  [ring/ring-defaults "0.1.5"]
                  [ring/ring-devel "1.4.0"]
                  [ring/ring-jetty-adapter "1.4.0"]
-                 [sablono "0.5.3"]
+                 [sablono "0.6.2"]
                  [sebluy/gps-tracker-common "0.1.0"]]
 
   :min-lein-version "2.0.0"

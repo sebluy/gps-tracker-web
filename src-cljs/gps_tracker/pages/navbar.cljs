@@ -2,6 +2,7 @@
 
 (defn view [address state]
    [:div.navbar.navbar-inverse.navbar-fixed-top
+    {:key "navbar"}
     [:div.container
      [:div.navbar-header
       [:a.navbar-brand "GPS Tracker"]]

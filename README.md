@@ -5,10 +5,17 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
-Switch to quiescent
+- Clean up UI
+- Reintegrate routing/history
 - Rethink page structure (rails?)
+- Reintegrate server coms
+- Add tracking
 
 Should address be global or local (and get updated i.e. map)
+
+Add error popup
+
+Use custom styling
 
 Handle errors
 - on remote errors revert to last known state

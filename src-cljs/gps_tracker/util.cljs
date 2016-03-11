@@ -11,3 +11,8 @@
       (if (empty? dissociated)
         (dissoc-in map sub-path)
         (assoc-in map sub-path dissociated)))))
+
+(defn distance->str [distance]
+  (if (> distance 1000)
+    (str (js/Math.floor (/ distance 1000.0)) " km")
+    (str (js/Math.floor distance) " m")))

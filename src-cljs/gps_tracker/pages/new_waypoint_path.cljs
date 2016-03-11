@@ -1,9 +1,10 @@
 (ns gps-tracker.pages.new-waypoint-path
   (:require [gps-tracker.map :as map]
-            [gps-tracker.waypoint-paths :as wp]))
+            [gps-tracker.waypoint-paths :as wp]
+            [gps-tracker.util :as util]))
 
 (defn upload-button [on-click]
-  [:input.btn.btn-primary
+  [:input.btn.btn-lg.btn-primary
    {:type "button"
     :value "Create"
     :on-click on-click}])
@@ -15,12 +16,12 @@
 
     page))
 
-(defn segment-distance-list [{:keys [points]}]
-  (->> points
-       (partition 2 1)
-       (map wp/distance-between)
+(defn segment-distance-list [path]
+  (->> path
+       (wp/segment-distances)
+       (map util/distance->str)
        (map-indexed (fn [index distance] [:li {:key index} distance]))
-       (into [:ul])))
+       (into [:ul.list-unstyled])))
 
 (defn view [address {:keys [path]}]
   [:div
@@ -28,7 +29,8 @@
     [:h1 "New Waypoint Path"
      [:p.pull-right.btn-toolbar
       (upload-button #(address `(:create ~path)))]]]
-   [:div.col-md-8 (map/WaypointCreationMap address)]
    [:div.col-md-2
-    [:h1 (str "Count: " (count (path :points)))]
-    (segment-distance-list path)]])
+    [:h3 (util/distance->str (wp/distance path))]
+    [:h3 (str (count (path :points)) " points")]
+    (segment-distance-list path)]
+   [:div.col-md-10 (map/WaypointCreationMap address)]])

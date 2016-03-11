@@ -29,18 +29,19 @@
     (waypoint-paths/view address waypoint-paths)
 
     :waypoint-path
-    (let [path (wp/find-path waypoint-paths (page :path-id))]
+    (let [path (wp/find waypoint-paths (page :path-id))]
       (waypoint-path/view (a/forward address (a/tag :waypoint-path)) path))
 
     :new-waypoint-path
     (new-waypoint-path/view (a/forward address (a/tag :new-waypoint-path)) page)
 
-    (s/html [:div "Page not found"])))
+    [:div "Page not found"]))
 
 (defn view [address state]
   [:div
    [:div.container
     [:div.row
-     [:div.span12
-      (navbar/view address state)
+     (navbar/view address state)
+     [:div
+      {:key "current-page"}
       (current-page (a/forward address (a/tag :page)) state)]]]])

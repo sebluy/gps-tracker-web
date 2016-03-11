@@ -8,11 +8,16 @@
    (point->latlng a)
    (point->latlng b)))
 
-(defn distance [points]
+(defn segment-distances [{:keys [points]}]
   (->> points
        (partition 2 1)
-       (map distance-between)
-       (reduce + 0)))
+       (map distance-between)))
+
+(defn distance [path]
+  (reduce + 0 (segment-distances path)))
+
+(defn valid? [path]
+  (> (count (path :points)) 0))
 
 (defn find [paths id]
   (->> paths
