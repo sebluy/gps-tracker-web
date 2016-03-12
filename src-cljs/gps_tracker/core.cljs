@@ -2,27 +2,35 @@
   (:require [quiescent.core :as q]
             [sablono.core :as s]
             [cljs.pprint :as pp]
+            [gps-tracker.history :as h]
             [gps-tracker.waypoint-paths :as wp]
             [gps-tracker.pages.core :as p]))
 
 (defonce state (atom nil))
+(defonce debug (atom {:state '() :actions '()}))
+
+;(-> @debug :state first)
+;(->> @debug :actions (take 3))
+;(swap! debug assoc :actions '())
+;(-> @debug)
 
 (declare handle)
 
 (defn intercept-page-actions [action state]
   (cond
-    (= (take 2 action) '(:new-waypoint-path :create))
+    (= (take 2 action) '(:waypoint-paths-new :create))
     (let [path (nth action 2)]
-      (cond-> state
-        (wp/valid? path)
-        (->>
-         (handle '(:page :navigate {:id :waypoint-paths}))
-         (handle `(:waypoint-paths :create ~path)))))
+      (if (wp/valid? path)
+        (->> state
+             (handle '(:page :navigate {:id :waypoint-paths-index}))
+             (handle `(:waypoint-paths :create ~path)))
+        (do (println "Path cannot be empty.")
+            state)))
 
-    (= (take 2 action) '(:waypoint-path :delete))
+    (= (take 2 action) '(:waypoint-paths-show :delete))
     (let [path-id (nth action 2)]
       (->> state
-           (handle '(:page :navigate {:id :waypoint-paths}))
+           (handle '(:page :navigate {:id :waypoint-paths-index}))
            (handle `(:waypoint-paths :delete ~path-id))))
 
     :else
@@ -31,8 +39,9 @@
 (defn handle [action state]
   (case (first action)
     :init
-    {:page {:id :waypoint-paths}
-     :waypoint-paths []}
+    (let [page (second action)]
+      {:page (p/init page)
+       :waypoint-paths []})
 
     :page
     (-> state
@@ -47,9 +56,9 @@
 (declare render)
 
 (defn address [action]
-  (pp/pprint action)
+  (swap! debug update :actions conj action)
   (swap! state (partial handle action))
-  (pp/pprint @state)
+  (swap! debug update :state conj @state)
   (render @state))
 
 (defn render [state]
@@ -57,11 +66,8 @@
             (.getElementById js/document "app")))
 
 (defn init! []
-  (address '(:init)))
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (defn initial-state []                                                              ;;
-;;   {:page (history/get-page)                                                         ;;
-;;    :remotes 0})                                                                     ;;
-;;                                                                                     ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+  (let [initial-page (h/get-page)]
+    (h/hook-browser
+     (fn [page] (address `(:page :navigate ~page)))
+     initial-page)
+    (address `(:init ~initial-page))))

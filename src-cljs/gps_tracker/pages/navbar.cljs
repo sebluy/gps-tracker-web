@@ -1,16 +1,20 @@
-(ns gps-tracker.pages.navbar)
+(ns gps-tracker.pages.navbar
+  (:require [gps-tracker.routing :as r]
+            [gps-tracker.address :as a]))
+
 
 (defn view [address state]
-   [:div.navbar.navbar-inverse.navbar-fixed-top
-    {:key "navbar"}
-    [:div.container
-     [:div.navbar-header
-      [:a.navbar-brand "GPS Tracker"]]
-     [:ul.nav.navbar-nav
-      [:li
-       [:a
-        {:onClick #(address '(:page :navigate {:id :waypoint-paths}))}
-        "Waypoint Paths"]]]]])
+  [:div.navbar.navbar-inverse.navbar-fixed-top
+   [:div.container
+    [:div.navbar-header
+     [:a.navbar-brand "GPS Tracker"]]
+    [:ul.nav.navbar-nav
+     [:li
+      [:a
+       (r/attrs
+        {:id :waypoint-paths-index}
+        (fn [page] (address `(:page :navigate ~page))))
+       "Waypoint Paths"]]]]])
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; (def spinner-options #js {:color "#FFF"                                     ;;

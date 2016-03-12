@@ -24,15 +24,10 @@
   (without-navigation-events
    #(.setToken history (routing/page->route page))))
 
-;(set-page {:id :waypoint-paths})
-
 (defn get-page []
   (-> history (.getToken) (routing/route->page)))
 
-;; replace page, set page, add listener, get page
-
-(defn unhook-browser
-  []
+(defn unhook-browser []
   (events/removeAll history EventType.NAVIGATE))
 
 (defn hook-browser
@@ -46,6 +41,5 @@
   (events/listen history
                  EventType.NAVIGATE
                  (fn [event]
-                   (println "Navigating")
                    (on-navigate (routing/route->page (.-token event)))
                    (.preventDefault event))))

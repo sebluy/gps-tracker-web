@@ -1,5 +1,7 @@
-(ns gps-tracker.pages.waypoint-paths
+(ns gps-tracker.pages.waypoint-paths.index
   (:require [gps-tracker.waypoint-paths :as wp]
+            [gps-tracker.address :as a]
+            [gps-tracker.routing :as r]
             [gps-tracker.util :as util]))
 
 (defn show [address {:keys [id points] :as path}]
@@ -7,8 +9,10 @@
    {:key id}
    [:td
     [:a
-     {:onClick #(address `(:navigate {:id :waypoint-path
-                                      :path-id ~id}))}
+     (r/attrs
+      {:id :waypoint-paths-show
+       :path-id id}
+      (fn [page] (address `(:navigate ~page))))
      (.toLocaleString id)]]
    [:td (count points)]
    [:td (util/distance->str (wp/distance path))]])
@@ -24,8 +28,10 @@
       (map (partial show address) (reverse (sort :id paths)))]]))
 
 (defn new-button [address]
-  [:a.btn.btn-lg.btn-primary
-   {:onClick #(address '(:navigate {:id :new-waypoint-path}))}
+  [:a.btn.btn-primary
+   (r/attrs
+    {:id :waypoint-paths-new}
+    (fn [page] (address `(:navigate ~page))))
    "Create Waypoint Path"])
 
 (defn view [address paths]

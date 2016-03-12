@@ -1,10 +1,10 @@
-(ns gps-tracker.pages.waypoint-path
+(ns gps-tracker.pages.waypoint-paths.show
   (:require [gps-tracker.map :as map]
             [gps-tracker.util :as util]
             [gps-tracker.waypoint-paths :as wp]))
 
 (defn delete-button [on-click]
-  [:input.btn.btn-lg.btn-danger
+  [:input.btn.btn-danger
    {:value "Delete"
     :type "button"
     :on-click on-click}])

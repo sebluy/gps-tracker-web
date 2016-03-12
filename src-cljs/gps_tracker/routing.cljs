@@ -1,11 +1,11 @@
 (ns gps-tracker.routing
-  (:require [bidi.bidi :as bidi]
-            [clojure.set :as s])
+  (:require [bidi.bidi :as bidi])
   (:import [goog Uri]))
 
-(def routes ["" {(bidi/alts "waypoint-paths/index" "") :waypoint-paths
-                 "waypoint-paths/" {"new" :new-waypoint-path
-                                    "show/" {[:path-id] :waypoint-path}}}])
+(def routes ["" {(bidi/alts "waypoint-paths/index" "") :waypoint-paths-index
+                 "waypoint-paths/" {"new" :waypoint-paths-new
+                                    "show/" {[:path-id] :waypoint-paths-show}}
+                 "not-found" :not-found}])
 
 ;; todo: integrate schema here
 
@@ -17,7 +17,7 @@
   should be reversable by the corresponding routeable->page."
   :id)
 
-(defmethod page->routeable :waypoint-path [page]
+(defmethod page->routeable :waypoint-paths-show [page]
   (update page :path-id #(.getTime %)))
 
 (defmethod page->routeable :default [page] page)
@@ -26,8 +26,11 @@
   "Reverses page->routeable"
   :id)
 
-(defmethod routeable->page :waypoint-path [routeable]
-  (update routeable :path-id #(js/Date. (long %))))
+(defmethod routeable->page :waypoint-paths-show [routeable]
+  (let [path-id (-> (routeable :path-id) (long) (js/Date.))]
+    (if (js/isNaN path-id)
+      {:id :not-found}
+      (assoc routeable :path-id path-id))))
 
 (defmethod routeable->page :default [routeable] routeable)
 
@@ -50,3 +53,9 @@
   (-> page
       page->route
       route->href))
+
+(defn attrs [page on-click]
+  {:href (page->href page)
+   :onClick (fn [e]
+              (on-click page)
+              (.preventDefault e))})

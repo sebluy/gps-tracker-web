@@ -1,10 +1,10 @@
-(ns gps-tracker.pages.new-waypoint-path
+(ns gps-tracker.pages.waypoint-paths.new
   (:require [gps-tracker.map :as map]
             [gps-tracker.waypoint-paths :as wp]
             [gps-tracker.util :as util]))
 
 (defn upload-button [on-click]
-  [:input.btn.btn-lg.btn-primary
+  [:input.btn.btn-primary
    {:type "button"
     :value "Create"
     :on-click on-click}])
