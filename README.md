@@ -5,16 +5,16 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
-Smart parens strict mode
+Add schema (actions, data)
 
 Add tests
-
-Add schema (actions, data)
 
 - Reintegrate server coms
 - Add tracking
 
 Redirect to not found page server side
+
+move from src and src-cljs to src/clj and src/cljs
 
 Add error modal/popup
 
