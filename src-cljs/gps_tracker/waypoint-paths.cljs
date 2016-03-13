@@ -1,4 +1,24 @@
-(ns gps-tracker.waypoint-paths)
+(ns gps-tracker.waypoint-paths
+  (:require [schema.core :as s]
+            [gps-tracker.schema-helpers :as sh]
+            [gps-tracker-common.schema :as cs]))
+
+(s/defschema Action
+  (s/either
+   (sh/action :create (sh/singleton cs/WaypointPath))
+   (sh/action :delete (sh/singleton cs/PathID))))
+
+(s/defn handle :- [cs/WaypointPath] [action :- Action paths :- [cs/WaypointPath]]
+  (case (first action)
+    :create
+    (let [path (second action)]
+      (conj paths path))
+
+    :delete
+    (let [id (second action)]
+      (filterv (fn [path] (not= id (path :id))) paths))
+
+    paths))
 
 (defn point->latlng [point]
   (js/google.maps.LatLng. (point :latitude) (point :longitude)))
@@ -23,15 +43,3 @@
   (->> paths
        (filter (fn [path] (= (path :id) id)))
        first))
-
-(defn handle [action paths]
-  (case (first action)
-    :create
-    (let [path (second action)]
-      (conj paths path))
-
-    :delete
-    (let [id (second action)]
-      (filterv (fn [path] (not= id (path :id))) paths))
-
-    paths))

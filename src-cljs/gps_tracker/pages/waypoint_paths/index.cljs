@@ -1,8 +1,12 @@
 (ns gps-tracker.pages.waypoint-paths.index
-  (:require [gps-tracker.waypoint-paths :as wp]
+  (:require [schema.core :as s]
+            [gps-tracker.waypoint-paths :as wp]
             [gps-tracker.address :as a]
             [gps-tracker.routing :as r]
             [gps-tracker.util :as util]))
+
+(s/defschema Page
+  {:id (s/eq :waypoint-paths-index)})
 
 (defn show [address {:keys [id points] :as path}]
   [:tr

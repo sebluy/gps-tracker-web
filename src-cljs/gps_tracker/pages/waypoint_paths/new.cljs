@@ -1,20 +1,38 @@
 (ns gps-tracker.pages.waypoint-paths.new
-  (:require [gps-tracker.map :as map]
+  (:require [schema.core :as s]
+            [gps-tracker-common.schema :as cs]
+            [gps-tracker.schema-helpers :as sh]
+            [gps-tracker.map :as map]
             [gps-tracker.waypoint-paths :as wp]
             [gps-tracker.util :as util]))
+
+(s/defschema PageID
+  {:id (s/eq :waypoint-paths-new)})
+
+(s/defschema Page
+  {:id (s/eq :waypoint-paths-new)
+   :path cs/WaypointPath})
+
+(s/defschema Action
+  (s/either
+   (sh/action :create (sh/singleton cs/WaypointPath))
+   (sh/action :add-point (sh/singleton cs/Waypoint))))
+
+(s/defn handle :- Page [action :- Action page :- Page]
+  (case (first action)
+    :add-point
+    (let [point (second action)]
+      (update-in page [:path :points] conj point))
+
+    page))
+
+;;;; VIEW
 
 (defn upload-button [on-click]
   [:input.btn.btn-primary
    {:type "button"
     :value "Create"
     :on-click on-click}])
-
-(defn handle [action page]
-  (case (first action)
-    :add-point
-    (update-in page [:path :points] conj (second action))
-
-    page))
 
 (defn segment-distance-list [path]
   (->> path

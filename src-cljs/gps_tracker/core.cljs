@@ -1,9 +1,14 @@
 (ns gps-tracker.core
   (:require [quiescent.core :as q]
-            [sablono.core :as s]
+            [sablono.core :as sab]
             [cljs.pprint :as pp]
+            [schema.core :as s]
+            [gps-tracker-common.schema :as cs]
+            [gps-tracker.schema-helpers :as sh]
             [gps-tracker.history :as h]
             [gps-tracker.waypoint-paths :as wp]
+            [gps-tracker.pages.navbar :as navbar]
+            [gps-tracker.address :as a]
             [gps-tracker.pages.core :as p]))
 
 (defonce state (atom nil))
@@ -14,9 +19,17 @@
 ;(swap! debug assoc :actions '())
 ;(-> @debug)
 
+(s/defschema State {:page p/Page
+                    :waypoint-paths [cs/WaypointPath]})
+
+
+(s/defschema Action (s/either
+                     (sh/action :page p/Action)
+                     (sh/action :waypoint-paths wp/Action)))
+
 (declare handle)
 
-(defn intercept-page-actions [action state]
+(s/defn intercept-page-actions :- State [action :- p/Action state :- State]
   (cond
     (= (take 2 action) '(:waypoint-paths-new :create))
     (let [path (nth action 2)]
@@ -36,13 +49,12 @@
     :else
     state))
 
-(defn handle [action state]
-  (case (first action)
-    :init
-    (let [page (second action)]
-      {:page (p/init page)
-       :waypoint-paths []})
+(s/defn init :- State [page :- p/PageID]
+  {:page (p/init page)
+   :waypoint-paths []})
 
+(s/defn handle :- State [action :- Action state :- State]
+  (case (first action)
     :page
     (-> state
         (update :page (partial p/handle (rest action)))
@@ -61,8 +73,16 @@
   (swap! debug update :state conj @state)
   (render @state))
 
+(defn view [address state]
+  [:div
+   [:div.container
+    [:div.row
+     (navbar/view address state)
+     [:div
+      (p/view (a/forward address (a/tag :page)) state)]]]])
+
 (defn render [state]
-  (q/render (s/html (p/view address state))
+  (q/render (sab/html (view address state))
             (.getElementById js/document "app")))
 
 (defn init! []
@@ -70,4 +90,6 @@
     (h/hook-browser
      (fn [page] (address `(:page :navigate ~page)))
      initial-page)
-    (address `(:init ~initial-page))))
+    (reset! state (init initial-page))
+    (swap! debug update :state conj @state)
+    (render @state)))

@@ -1,7 +1,19 @@
 (ns gps-tracker.pages.waypoint-paths.show
-  (:require [gps-tracker.map :as map]
+  (:require [schema.core :as s]
+            [gps-tracker-common.schema :as cs]
+            [gps-tracker.schema-helpers :as sh]
+            [gps-tracker.map :as map]
             [gps-tracker.util :as util]
             [gps-tracker.waypoint-paths :as wp]))
+
+(s/defschema Action
+  (sh/action :delete (sh/singleton cs/PathID)))
+
+(s/defschema Page
+  {:id (s/eq :waypoint-paths-show)
+   :path-id cs/Date})
+
+;;;; VIEW
 
 (defn delete-button [on-click]
   [:input.btn.btn-danger
