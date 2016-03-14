@@ -7,7 +7,7 @@
   (let [s0 (c/init {:id :waypoint-paths-index})
 
         s1 (->> s0
-                (c/handle `(:page :navigate {:id :waypoint-paths-new}))
+                (c/handle `(:page :waypoint-paths-index :new))
                 (c/handle `(:page :waypoint-paths-new :add-point
                                  {:latitude 1.0 :longitude 2.0}))
                 (c/handle `(:page :waypoint-paths-new :add-point
@@ -26,8 +26,7 @@
         path-id (get-in s2 [:waypoint-paths 0 :id])
         _ (println s2)
         s3 (->> s2
-                (c/handle `(:page :navigate {:id :waypoint-paths-show
-                                             :path-id ~path-id}))
+                (c/handle `(:page :waypoint-paths-index :show ~path-id))
                 (c/handle `(:page :waypoint-paths-show :delete ~path-id)))
         _ (t/is (= (count (s3 :waypoint-paths)) 0))
         _ (t/is (= (get-in s3 [:page :id] :waypoint-paths-index)))]))

@@ -1,21 +1,25 @@
 (ns gps-tracker.remote
   (:require [ajax.core :as ajax]))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; (defn on-error                                                                            ;;
-;;   [_]                                                                                     ;;
-;;   (js/alert "Remote error... You may need to refresh the page."))                         ;;
-;;                                                                                           ;;
-;; (defn post-actions                                                                        ;;
-;;   [actions callback]                                                                      ;;
-;;   (ajax/POST                                                                              ;;
-;;    "/api"                                                                                 ;;
-;;     {:params          actions                                                             ;;
-;;      :handler         #(callback :success %)                                              ;;
-;;      :error-handler   #(callback :error %)                                                ;;
-;;      :format          :edn                                                                ;;
-;;      :response-format :edn}))                                                             ;;
-;;                                                                                           ;;
+(defn on-error
+  [_]
+  (js/alert "Remote error... You may need to refresh the page."))
+
+(defn post-actions
+  [actions callback]
+  (ajax/POST
+   "/api"
+    {:params          actions
+     :handler         #(callback %)
+     :error-handler   on-error
+     :format          :edn
+     :response-format :edn}))
+
+(defn get-waypoint-paths [callback]
+  (post-actions [{:action :get-paths
+                  :path-type :waypoint}]
+                (comp callback first)))
+
 ;; (defmulti read om/dispatch)                                                               ;;
 ;;                                                                                           ;;
 ;; (defmethod read :waypoint-paths                                                           ;;

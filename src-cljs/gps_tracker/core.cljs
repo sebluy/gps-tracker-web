@@ -6,6 +6,7 @@
             [gps-tracker-common.schema :as cs]
             [gps-tracker.schema-helpers :as sh]
             [gps-tracker.history :as h]
+            [gps-tracker.remote :as r]
             [gps-tracker.waypoint-paths :as wp]
             [gps-tracker.pages.navbar :as navbar]
             [gps-tracker.address :as a]
@@ -15,7 +16,7 @@
 (defonce debug (atom {:state '() :actions '()}))
 
 ;(-> @debug :state first)
-;(->> @debug :actions (take 3))
+;(->> @debug :actions (take 2))
 ;(swap! debug assoc :actions '())
 ;(-> @debug)
 
@@ -28,11 +29,16 @@
                      (sh/action :waypoint-paths wp/Action)))
 
 (declare handle)
+(declare address)
 
-(s/defn intercept-page-actions :- State [action :- p/Action state :- State]
+(s/defn init :- State [page :- p/PageID]
+  {:page (p/init page)
+   :waypoint-paths []})
+
+(s/defn intercept :- State [action :- Action state :- State]
   (cond
-    (= (take 2 action) '(:waypoint-paths-new :create))
-    (let [path (nth action 2)]
+    (= (take 3 action) '(:page :waypoint-paths-new :create))
+    (let [path (last action 3)]
       (if (wp/valid? path)
         (->> state
              (handle '(:page :navigate {:id :waypoint-paths-index}))
@@ -40,30 +46,35 @@
         (do (println "Path cannot be empty.")
             state)))
 
-    (= (take 2 action) '(:waypoint-paths-show :delete))
-    (let [path-id (nth action 2)]
+    (= (take 3 action) '(:page :waypoint-paths-show :delete))
+    (let [path-id (last action)]
       (->> state
            (handle '(:page :navigate {:id :waypoint-paths-index}))
            (handle `(:waypoint-paths :delete ~path-id))))
 
+    (= action '(:page :waypoint-paths-index :refresh))
+    (do (println "Refreshing")
+        (r/get-waypoint-paths
+         (fn [paths] (address `(:waypoint-paths :refresh ~paths))))
+        state)
+
     :else
     state))
 
-(s/defn init :- State [page :- p/PageID]
-  {:page (p/init page)
-   :waypoint-paths []})
-
-(s/defn handle :- State [action :- Action state :- State]
+(s/defn delegate :- State [action :- Action state :- State]
   (case (first action)
     :page
-    (-> state
-        (update :page (partial p/handle (rest action)))
-        (->> (intercept-page-actions (rest action))))
+    (update state :page (partial p/handle (rest action)))
 
     :waypoint-paths
     (update state :waypoint-paths (partial wp/handle (rest action)))
 
     state))
+
+(s/defn handle :- State [action :- Action state :- State]
+  (->> state
+       (delegate action)
+       (intercept action)))
 
 (declare render)
 

@@ -5,12 +5,15 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
-Add schema (actions, data)
+Reintegrate server coms
 
-Add tests
+Handle errors
+- on remote errors revert to last known state
+- on read, add fail callback
 
-- Reintegrate server coms
-- Add tracking
+Add tracking
+
+Figure out some way to manage app state and pure, sync effects, async effects
 
 Redirect to not found page server side
 
@@ -19,10 +22,6 @@ move from src and src-cljs to src/clj and src/cljs
 Add error modal/popup
 
 Use custom styling (learn from bootstrap)
-
-Handle errors
-- on remote errors revert to last known state
-- on read, add fail callback
 
 Fix figwheel repl, do whatever github readme says
 

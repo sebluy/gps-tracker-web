@@ -11,12 +11,16 @@
 (s/defn handle :- [cs/WaypointPath] [action :- Action paths :- [cs/WaypointPath]]
   (case (first action)
     :create
-    (let [path (second action)]
+    (let [path (last action)]
       (conj paths path))
 
     :delete
-    (let [id (second action)]
+    (let [id (last action)]
       (filterv (fn [path] (not= id (path :id))) paths))
+
+    :refresh
+    (let [paths (last action)]
+      paths)
 
     paths))
 

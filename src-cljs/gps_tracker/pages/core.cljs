@@ -24,6 +24,7 @@
 (s/defschema Action
   (s/either
    (sh/action :navigate (sh/singleton PageID))
+   (sh/action :waypoint-paths-index wp-index/Action)
    (sh/action :waypoint-paths-new wp-new/Action)
    (sh/action :waypoint-paths-show wp-show/Action)))
 
@@ -34,17 +35,47 @@
 
     page))
 
-(s/defn handle :- Page [action :- Action page :- Page]
+(declare handle)
+
+(s/defn intercept :- Page
+  [action :- Action page :- Page]
+  (cond
+    (= (take 2 action) '(:waypoint-paths-index :show))
+    (let [path-id (last action)]
+      (handle `(:navigate {:id :waypoint-paths-show
+                           :path-id ~path-id})
+              page))
+
+    (= action '(:waypoint-paths-index :new))
+    (handle `(:navigate {:id :waypoint-paths-new}) page)
+
+    :else
+    page))
+
+(s/defn delegate :- Page [action :- Action page :- Page]
   (case (first action)
-    :navigate
-    (let [new-page (second action)]
-      (do (h/set-page new-page)
-          (init new-page)))
 
     :waypoint-paths-new
     (wp-new/handle (rest action) page)
 
     page))
+
+(s/defn local :- Page [action :- Action page :- Page]
+  (case (first action)
+    :navigate
+    (let [new-page (last action)]
+      (do (h/set-page new-page)
+          (init new-page)))
+
+    page))
+
+(s/defn handle :- Page [action :- Action page :- Page]
+  (->> page
+       (delegate action)
+       (local action)
+       (intercept action)))
+
+;;;; VIEW
 
 (defn not-found-page []
   [:div.col-md-8.col-md-offset-2
@@ -53,7 +84,8 @@
 (defn view [address {:keys [waypoint-paths page]}]
   (case (page :id)
     :waypoint-paths-index
-    (wp-index/view address waypoint-paths)
+    (wp-index/view (a/forward address (a/tag :waypoint-paths-index))
+                   waypoint-paths)
 
     :waypoint-paths-show
     (let [path (wp/find waypoint-paths (page :path-id))]
