@@ -21,8 +21,8 @@
 ;(-> @debug)
 
 (s/defschema State {:page p/Page
-                    :waypoint-paths [cs/WaypointPath]})
-
+                    :waypoint-paths [cs/WaypointPath]
+                    :remote s/Bool})
 
 (s/defschema Action (s/either
                      (sh/action :page p/Action)
@@ -33,30 +33,36 @@
 
 (s/defn init :- State [page :- p/PageID]
   {:page (p/init page)
-   :waypoint-paths []})
+   :waypoint-paths []
+   :remote false})
 
 (s/defn intercept :- State [action :- Action state :- State]
   (cond
     (= (take 3 action) '(:page :waypoint-paths-new :create))
     (let [path (last action 3)]
       (if (wp/valid? path)
-        (->> state
-             (handle '(:page :navigate {:id :waypoint-paths-index}))
-             (handle `(:waypoint-paths :create ~path)))
+        (do (r/create-waypoint-path path)
+            (->> state
+                 (handle `(:page :navigate {:id :waypoint-paths-index}))
+                 (handle `(:waypoint-paths :create ~path))))
         (do (println "Path cannot be empty.")
             state)))
 
     (= (take 3 action) '(:page :waypoint-paths-show :delete))
     (let [path-id (last action)]
+      (r/delete-waypoint-path path-id)
       (->> state
-           (handle '(:page :navigate {:id :waypoint-paths-index}))
+           (handle `(:page :navigate {:id :waypoint-paths-index}))
            (handle `(:waypoint-paths :delete ~path-id))))
 
-    (= action '(:page :waypoint-paths-index :refresh))
+    (= action `(:page :waypoint-paths-index :refresh))
     (do (println "Refreshing")
         (r/get-waypoint-paths
          (fn [paths] (address `(:waypoint-paths :refresh ~paths))))
-        state)
+        (assoc state :remote true))
+
+    (= (take 2 action) `(:waypoint-paths :refresh))
+    (assoc state :remote false)
 
     :else
     state))
@@ -88,7 +94,7 @@
   [:div
    [:div.container
     [:div.row
-     (navbar/view address state)
+     (navbar/view address (state :remote))
      [:div
       (p/view (a/forward address (a/tag :page)) state)]]]])
 

@@ -1,5 +1,16 @@
 (ns gps-tracker.remote
-  (:require [ajax.core :as ajax]))
+  (:require [ajax.core :as ajax]
+            [schema.core :as s]
+            [gps-tracker.schema-helpers :as sh]))
+
+(def Remote s/Bool)
+
+(s/defschema Action
+  (s/either
+   (sh/action :get-waypoint-paths s/Any)
+   (sh/action :delete-waypoint-path #_path-id s/Any)
+   (sh/action :create-waypoint-path #_path s/Any)
+   (sh/action :receive )))
 
 (defn on-error
   [_]
@@ -15,61 +26,28 @@
      :format          :edn
      :response-format :edn}))
 
+(s/defn handle :- Remote [address action :- Action state :- Remote]
+  (case (first action)
+    :get-waypoint-paths
+    (get-waypoint-paths #(address (last action)))
+    )
+  (->> state
+       (delegate action)
+       (intercept action)))
+
 (defn get-waypoint-paths [callback]
   (post-actions [{:action :get-paths
                   :path-type :waypoint}]
                 (comp callback first)))
 
-;; (defmulti read om/dispatch)                                                               ;;
-;;                                                                                           ;;
-;; (defmethod read :waypoint-paths                                                           ;;
-;;   [{:keys [callback]} key params]                                                         ;;
-;;   (post-actions [{:action :get-paths                                                      ;;
-;;                   :path-type :waypoint}]                                                  ;;
-;;                 (fn [results]                                                             ;;
-;;                   (callback {:waypoint-paths (first results)}))))                         ;;
-;;                                                                                           ;;
-;; (defmethod read :default                                                                  ;;
-;;   [{:keys [callback]} key params]                                                         ;;
-;;   (callback nil)                                                                          ;;
-;;   (println "Bad remote read"))                                                            ;;
-;;                                                                                           ;;
-;; (defmulti mutate om/dispatch)                                                             ;;
-;;                                                                                           ;;
-;; (defmethod mutate 'add-waypoint-path                                                      ;;
-;;   [{:keys [callback]} key {:keys [path]}]                                                 ;;
-;;   {:action (fn [] (post-actions [{:action :add-path                                       ;;
-;;                                   :path-type :waypoint                                    ;;
-;;                                   :path path}]                                            ;;
-;;                                 #(callback nil)))})                                       ;;
-;;                                                                                           ;;
-;; (defmethod mutate 'delete-waypoint-path                                                   ;;
-;;   [{:keys [callback]} key {:keys [path-id]}]                                              ;;
-;;   {:action (fn [] (post-actions [{:action :delete-path                                    ;;
-;;                                   :path-type :waypoint                                    ;;
-;;                                   :path-id path-id}]                                      ;;
-;;                                 #(callback nil)))})                                       ;;
-;;                                                                                           ;;
-;; (defmethod mutate :default                                                                ;;
-;;   [{:keys [callback]} key params]                                                         ;;
-;;   {:action (fn []                                                                         ;;
-;;              (callback nil)                                                               ;;
-;;              (println "Bad mutation" key params))})                                       ;;
-;;                                                                                           ;;
-;; (def parser (om/parser {:read read :mutate mutate}))                                      ;;
-;;                                                                                           ;;
-;; (defn make-callback [om-callback state]                                                   ;;
-;;   (fn [status response]                                                                   ;;
-;;     (let [new-remotes {:remotes (dec (@state :remotes))}]                                 ;;
-;;       (om-callback (if (= status :success)                                                ;;
-;;                      (merge new-remotes response)                                         ;;
-;;                      ;; add error condition                                               ;;
-;;                      new-remotes)))))                                                     ;;
-;;                                                                                           ;;
-;; (defn send                                                                                ;;
-;;   [query om-callback]                                                                     ;;
-;;   (let [reconciler gps-tracker.core.reconciler                                            ;;
-;;         state (om/app-state reconciler)]                                                  ;;
-;;     (om/transact! reconciler `[(~'inc-remotes) :remotes])                                 ;;
-;;     (parser {:callback (make-callback om-callback state)} (-> (query :remote) set vec)))) ;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defn create-waypoint-path [path]
+  (post-actions [{:action :add-path
+                  :path-type :waypoint
+                  :path path}]
+                identity))
+
+(defn delete-waypoint-path [path-id]
+  (post-actions [{:action :delete-path
+                  :path-type :waypoint
+                  :path-id path-id}]
+                identity))

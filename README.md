@@ -5,7 +5,10 @@ load env/dev/clj/gps_tracker/env.clj
 
 Todo:
 
-Reintegrate server coms
+Add remote queue
+Decomplect remote code
+
+Do delegations automagically
 
 Handle errors
 - on remote errors revert to last known state
