@@ -5,8 +5,9 @@
 
 (s/defschema Action
   (s/either
-   (sh/action :create (sh/singleton cs/WaypointPath))
-   (sh/action :delete (sh/singleton cs/PathID))))
+   (sh/list :create (sh/singleton cs/WaypointPath))
+   (sh/list :refresh (sh/singleton [cs/WaypointPath]))
+   (sh/list :delete (sh/singleton cs/PathID))))
 
 (s/defn handle :- [cs/WaypointPath] [action :- Action paths :- [cs/WaypointPath]]
   (case (first action)

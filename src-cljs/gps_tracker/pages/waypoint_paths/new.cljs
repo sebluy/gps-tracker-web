@@ -15,8 +15,8 @@
 
 (s/defschema Action
   (s/either
-   (sh/action :create (sh/singleton cs/WaypointPath))
-   (sh/action :add-point (sh/singleton cs/Waypoint))))
+   (sh/list :create (sh/singleton cs/WaypointPath))
+   (sh/list :add-point (sh/singleton cs/Waypoint))))
 
 (s/defn handle :- Page [action :- Action page :- Page]
   (case (first action)

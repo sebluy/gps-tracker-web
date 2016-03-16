@@ -23,10 +23,10 @@
 
 (s/defschema Action
   (s/either
-   (sh/action :navigate (sh/singleton PageID))
-   (sh/action :waypoint-paths-index wp-index/Action)
-   (sh/action :waypoint-paths-new wp-new/Action)
-   (sh/action :waypoint-paths-show wp-show/Action)))
+   (sh/list :navigate (sh/singleton PageID))
+   (sh/list :waypoint-paths-index wp-index/Action)
+   (sh/list :waypoint-paths-new wp-new/Action)
+   (sh/list :waypoint-paths-show wp-show/Action)))
 
 (s/defn init :- Page [page :- PageID]
   (case (page :id)
@@ -37,7 +37,7 @@
 
 (declare handle)
 
-(s/defn intercept :- Page
+(s/defn eavesdrop :- Page
   [action :- Action page :- Page]
   (cond
     (= (take 2 action) '(:waypoint-paths-index :show))
@@ -73,7 +73,7 @@
   (->> page
        (delegate action)
        (local action)
-       (intercept action)))
+       (eavesdrop action)))
 
 ;;;; VIEW
 

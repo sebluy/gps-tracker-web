@@ -1,88 +1,129 @@
 (ns gps-tracker.remote
   (:require [ajax.core :as ajax]
+            [gps-tracker.address :as a]
             [schema.core :as s]
             [gps-tracker-common.schema :as cs]
             [gps-tracker.schema-helpers :as sh]))
 
-(def Remote s/Bool)
-
-(s/defschema SendAction
-  (s/either
-   (s/eq '(:get-waypoint-paths))
-   (sh/action :delete-waypoint-path cs/PathID)
-   (sh/action :create-waypoint-path cs/Path)))
-
-(s/defschema ReceiveAction
-  (s/either
-   (sh/action :get-waypoint-paths [cs/Path])
-   (sh/action :delete-waypoint-path cs/PathID)
-   (sh/action :create-waypoint-path cs/Path)))
-
-(s/defschema Action
-  (s/either
-   (sh/action :send SendAction)
-   (sh/action :receive ReceiveAction)))
+;;;; HELPERS
 
 (defn on-error
   [_]
   (js/alert "Remote error... You may need to refresh the page."))
 
 (defn post-actions
-  [actions callback]
+  [actions on-success on-error]
+  (println "Posting:" actions)
   (ajax/POST
    "/api"
-    {:params          actions
-     :handler         callback
-     :error-handler   on-error
-     :format          :edn
-     :response-format :edn}))
+   {:params          actions
+    :handler         on-success
+    :error-handler   on-error
+    :format          :edn
+    :response-format :edn}))
 
-(defn get-waypoint-paths [callback]
+(defn get-waypoint-paths [on-success on-error]
   (post-actions [{:action :get-paths
                   :path-type :waypoint}]
-                (comp callback first)))
+                (comp on-success first)
+                on-error))
 
-(defn create-waypoint-path [path callback]
+(defn create-waypoint-path [path on-success on-error]
   (post-actions [{:action :add-path
                   :path-type :waypoint
                   :path path}]
-                (comp callback first)))
+                (comp on-success first)
+                on-error))
 
-(defn delete-waypoint-path [path-id callback]
+(defn delete-waypoint-path [path-id on-success on-error]
   (post-actions [{:action :delete-path
                   :path-type :waypoint
                   :path-id path-id}]
-                (comp callback first)))
+                (comp on-success first)
+                on-error))
 
-(s/defn handle-send [address action :- SendAction]
-  (case (first action)
-    :get-waypoint-paths
-    (get-waypoint-paths
-     (fn [paths]
-       (address `(:receive :get-waypoint-paths ~paths))))
+;;;; STATE
 
-    :delete-waypoint-path
-    (let [path-id (last action)]
-      (delete-waypoint-path
-       path-id
+(s/defschema Remote {:next-id s/Int
+                     :pending (sh/set s/Int)})
+
+(defn init []
+  {:next-id 0
+   :pending #{}})
+
+;;;; ACTIONS
+
+(s/defschema SendAction
+  (s/either
+   (s/eq '(:get-waypoint-paths))
+   (sh/list :delete-waypoint-path (sh/singleton cs/PathID))
+   (sh/list :create-waypoint-path (sh/singleton cs/Path))))
+
+(s/defschema SuccessReceiveAction
+  (sh/list
+   :success
+   (s/either
+    (sh/list :get-waypoint-paths (sh/singleton [cs/Path]))
+    (sh/list :delete-waypoint-path (sh/singleton cs/PathID))
+    (sh/list :create-waypoint-path (sh/singleton cs/Path)))))
+
+(s/defschema ErrorReceiveAction
+  (sh/list
+   :error
+   SendAction))
+
+(s/defschema SendActionWithID
+  (sh/list s/Int SendAction))
+
+(s/defschema ReceiveActionWithID
+  (sh/list s/Int (s/either SuccessReceiveAction ErrorReceiveAction)))
+
+(s/defschema Action
+  (s/either
+   (sh/list :send SendActionWithID)
+   (sh/list :receive ReceiveActionWithID)))
+
+(s/defn handle-send [address action :- SendActionWithID]
+  (let [id (first action)
+        type (second action)
+        address2 (a/forward address (a/tag `(:receive ~id)))]
+    (case type
+      :get-waypoint-paths
+      (get-waypoint-paths
+       (fn [paths]
+         (address2 `(:success :get-waypoint-paths ~paths)))
        (fn [_]
-         (address `(:receive :delete-waypoint-path ~path-id)))))
+         (address2 `(:error :get-waypoint-paths))))
 
-    :create-waypoint-path
-    (let [path (last action)]
-      (create-waypoint-path
-       path
-       (fn [_]
-         (address `(:receive :create-waypoint-path ~path)))))
+      :delete-waypoint-path
+      (let [path-id (last action)]
+        (delete-waypoint-path
+         path-id
+         (fn [_]
+           (address2 `(:success :delete-waypoint-path ~path-id)))
+         (fn [_]
+           (address2 `(:error :delete-waypoint-path ~path-id)))))
 
-    nil))
+      :create-waypoint-path
+      (let [path (last action)]
+        (create-waypoint-path
+         path
+         (fn [_]
+           (address2 `(:success :create-waypoint-path ~path)))
+         (fn [_]
+           (address2 `(:error :create-waypoint-path ~path)))))
+
+      nil)))
 
 (s/defn handle :- Remote [address action :- Action remote :- Remote]
   (case (first action)
 
     :send
     (do (handle-send address (rest action))
-        true)
+        (let [{:keys [next-id pending]} remote]
+          {:next-id (inc next-id)
+           :pending (conj pending next-id)}))
 
     :receive
-    false))
+    (let [id (second action)]
+      (update remote :pending disj id))))

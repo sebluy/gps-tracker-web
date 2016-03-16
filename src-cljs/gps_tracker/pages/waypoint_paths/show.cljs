@@ -7,7 +7,7 @@
             [gps-tracker.waypoint-paths :as wp]))
 
 (s/defschema Action
-  (sh/action :delete (sh/singleton cs/PathID)))
+  (sh/list :delete (sh/singleton cs/PathID)))
 
 (s/defschema Page
   {:id (s/eq :waypoint-paths-show)

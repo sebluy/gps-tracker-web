@@ -5,15 +5,22 @@
 (defn singleton [type]
   (s/pred
    (fn [val]
-     (and (= (count val) 1)
+     (and (empty? (rest val))
           (nil? (s/check type (first val)))))))
 
-(defn action [f r]
+(defn list [first-type rest-type]
   (s/pred
-   (fn [action]
-     (and (= f (first action))
-          (nil? (s/check r (rest action)))))))
+   (fn [xs]
+     (and (or
+           (and (keyword? first-type) (= first-type (first xs)))
+           (nil? (s/check first-type (first xs))))
+          (nil? (s/check rest-type (rest xs)))))))
 
+(defn set [type]
+  (s/pred
+   (fn [val]
+     (and (set? val)
+          (every? (fn [elem] (nil? (s/check type elem))) val)))))
 
 ;(s/validate Action '(:page :navigate {:id :waypoint-paths-new}))
 

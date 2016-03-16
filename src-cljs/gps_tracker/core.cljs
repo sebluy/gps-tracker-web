@@ -27,41 +27,46 @@
 
 (s/defschema State {:page p/Page
                     :waypoint-paths [cs/WaypointPath]
-                    :remote s/Bool})
+                    :remote r/Remote})
 
 (s/defschema Action (s/either
-                     (sh/action :page p/Action)
-                     (sh/action :waypoint-paths wp/Action)))
-
+                     (sh/list :page p/Action)
+                     (sh/list :waypoint-paths wp/Action)
+                     (sh/list :remote r/Action)))
 
 (s/defn init :- State [page :- p/PageID]
   {:page (p/init page)
    :waypoint-paths []
-   :remote false})
+   :remote (r/init)})
 
-(s/defn intercept :- State [action :- Action state :- State]
+(s/defn eavesdrop :- State [action :- Action state :- State]
   (cond
     (= (take 3 action) '(:page :waypoint-paths-new :create))
     (let [path (last action)]
       (if (wp/valid? path)
-        (->> state
-             (handle `(:remote :send :create-waypoint-path ~path))
-             (handle `(:page :navigate {:id :waypoint-paths-index}))
-             (handle `(:waypoint-paths :create ~path)))
+        (let [remote-id (get-in state [:remote :next-id])]
+          (->> state
+               (handle `(:remote :send ~remote-id :create-waypoint-path ~path))
+               (handle `(:page :navigate {:id :waypoint-paths-index}))
+               (handle `(:waypoint-paths :create ~path))))
         (do (println "Path cannot be empty.")
             state)))
 
     (= (take 3 action) '(:page :waypoint-paths-show :delete))
-    (let [path-id (last action)]
-      (->> state
-           (handle `(:remote :send :delete-waypoint-path ~path-id))
-           (handle `(:page :navigate {:id :waypoint-paths-index}))
-           (handle `(:waypoint-paths :delete ~path-id))))
+    (let [path-id (last action)
+          remote-id (get-in state [:remote :next-id])]
+        (->> state
+             (handle `(:remote :send ~remote-id :delete-waypoint-path ~path-id))
+             (handle `(:page :navigate {:id :waypoint-paths-index}))
+             (handle `(:waypoint-paths :delete ~path-id))))
 
     (= action `(:page :waypoint-paths-index :refresh))
-    (handle `(:remote :send :get-waypoint-paths) state)
+    (let [remote-id (get-in state [:remote :next-id])]
+      (handle `(:remote :send ~remote-id :get-waypoint-paths) state))
 
-    (= (take 3 action) `(:remote :receive :get-waypoint-paths))
+    (and (= (take 2 action) `(:remote :receive))
+         (= (nth action 3) :success)
+         (= (nth action 4) :get-waypoint-paths))
     (let [paths (last action)]
       (handle `(:waypoint-paths :refresh ~paths) state))
 
@@ -85,25 +90,22 @@
 (s/defn handle :- State [action :- Action state :- State]
   (->> state
        (delegate action)
-       (intercept action)))
+       (eavesdrop action)))
 
 (defn view [address state]
   [:div
    [:div.container
     [:div.row
-     (navbar/view address (state :remote))
+     (navbar/view address (seq (get-in state [:remote :pending])))
      [:div
       (p/view (a/forward address (a/tag :page)) state)]]]])
 
 (defn address [action]
+  (pp/pprint action)
   (swap! debug update :actions conj action)
   (swap! state (partial handle action))
   (swap! debug update :state conj @state)
   (render @state))
-
-(defn debug-pr [val]
-  (println val)
-  val)
 
 (defn render [state]
   (q/render (sab/html (view address state))

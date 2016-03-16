@@ -12,7 +12,7 @@
 
 (s/defschema Action
   (s/either
-   (sh/action :show (sh/singleton cs/PathID))
+   (sh/list :show (sh/singleton cs/PathID))
    (s/eq '(:refresh))
    (s/eq '(:new))))
 
