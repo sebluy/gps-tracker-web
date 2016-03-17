@@ -157,5 +157,5 @@
      (fn [page] (address `(:page :navigate ~page)))
      initial-page)
     (reset! state (init initial-page))
-    (swap! debug update :state conj @state)
+    #_(swap! debug update :state conj @state)
     (render @state)))

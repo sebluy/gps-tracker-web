@@ -32,10 +32,13 @@
   :main gps-tracker.core
 
   :plugins [[lein-environ "1.0.0"]
+            [lein-heroku "0.5.3"]
             [lein-ancient "0.6.7"]
             [lein-figwheel "0.5.0-4"]
-            [lein-cljsbuild "1.0.6"]
+            [lein-cljsbuild "1.1.3"]
             [cider/cider-nrepl "0.11.0-SNAPSHOT"]]
+
+  :heroku {:app-name "fierce-dawn-3931"}
 
   :clean-targets ^{:protect false} ["resources/public/js"]
 
@@ -55,11 +58,11 @@
              :hooks        [leiningen.cljsbuild]
              :cljsbuild    {:jar true
                             :builds
-                                 {:app
-                                  {:source-paths ["env/prod/cljs"]
-                                   :compiler     {:optimizations :advanced
-                                                  :elide-asserts :true
-                                                  :pretty-print  false}}}}
+                            {:app
+                             {:source-paths ["env/prod/cljs"]
+                              :compiler     {:optimizations :advanced
+                                             :elide-asserts :true
+                                             :pretty-print  false}}}}
 
              :aot          :all}
    :dev     {:source-paths ["env/dev/clj"]
