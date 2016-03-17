@@ -7,13 +7,8 @@
 
 ;;;; HELPERS
 
-(defn on-error
-  [_]
-  (js/alert "Remote error... You may need to refresh the page."))
-
 (defn post-actions
   [actions on-success on-error]
-  (println "Posting:" actions)
   (ajax/POST
    "/api"
    {:params          actions
@@ -21,6 +16,12 @@
     :error-handler   on-error
     :format          :edn
     :response-format :edn}))
+
+(defn get-tracking-paths [on-success on-error]
+  (post-actions [{:action :get-paths
+                  :path-type :tracking}]
+                (comp on-success first)
+                on-error))
 
 (defn get-waypoint-paths [on-success on-error]
   (post-actions [{:action :get-paths
@@ -56,16 +57,18 @@
 (s/defschema SendAction
   (s/either
    (s/eq '(:get-waypoint-paths))
+   (s/eq '(:get-tracking-paths))
    (sh/list :delete-waypoint-path (sh/singleton cs/PathID))
-   (sh/list :create-waypoint-path (sh/singleton cs/Path))))
+   (sh/list :create-waypoint-path (sh/singleton cs/WaypointPath))))
 
 (s/defschema SuccessReceiveAction
   (sh/list
    :success
    (s/either
-    (sh/list :get-waypoint-paths (sh/singleton [cs/Path]))
+    (sh/list :get-waypoint-paths (sh/singleton [cs/WaypointPath]))
+    (sh/list :get-tracking-paths (sh/singleton [cs/TrackingPath]))
     (sh/list :delete-waypoint-path (sh/singleton cs/PathID))
-    (sh/list :create-waypoint-path (sh/singleton cs/Path)))))
+    (sh/list :create-waypoint-path (sh/singleton cs/WaypointPath)))))
 
 (s/defschema ErrorReceiveAction
   (sh/list
@@ -94,6 +97,13 @@
          (address2 `(:success :get-waypoint-paths ~paths)))
        (fn [_]
          (address2 `(:error :get-waypoint-paths))))
+
+      :get-tracking-paths
+      (get-tracking-paths
+       (fn [paths]
+         (address2 `(:success :get-tracking-paths ~paths)))
+       (fn [_]
+         (address2 `(:error :get-tracking-paths))))
 
       :delete-waypoint-path
       (let [path-id (last action)]

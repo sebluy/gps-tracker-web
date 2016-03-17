@@ -5,6 +5,8 @@
 (def routes ["" {(bidi/alts "waypoint-paths/index" "") :waypoint-paths-index
                  "waypoint-paths/" {"new" :waypoint-paths-new
                                     "show/" {[:path-id] :waypoint-paths-show}}
+                 "tracking-paths/" {"index" :tracking-paths-index
+                                    "show/" {[:path-id] :tracking-paths-show}}
                  "not-found" :not-found}])
 
 ;; todo: integrate schema here
@@ -20,11 +22,20 @@
 (defmethod page->routeable :waypoint-paths-show [page]
   (update page :path-id #(.getTime %)))
 
+(defmethod page->routeable :tracking-paths-show [page]
+  (update page :path-id #(.getTime %)))
+
 (defmethod page->routeable :default [page] page)
 
 (defmulti routeable->page
   "Reverses page->routeable"
   :id)
+
+(defmethod routeable->page :tracking-paths-show [routeable]
+  (let [path-id (-> (routeable :path-id) (long) (js/Date.))]
+    (if (js/isNaN path-id)
+      {:id :not-found}
+      (assoc routeable :path-id path-id))))
 
 (defmethod routeable->page :waypoint-paths-show [routeable]
   (let [path-id (-> (routeable :path-id) (long) (js/Date.))]

@@ -36,9 +36,9 @@
 (defn sql->date [date]
   (Date. (.getTime date)))
 
-;; setup, eventually move to migrations
+;; setup
 
-(defn create-point-table! []
+(defn create-tracking-point-table! []
   (jdbc/db-do-commands
    *txn*
    (jdbc/create-table-ddl
@@ -78,7 +78,9 @@
   point)
 
 (defn common-point->sql [point path-id index]
-  (assoc point :path_id (date->sql path-id) :index index))
+  (assoc point
+         :path_id (date->sql path-id)
+         :index index))
 
 (defn point->sql [type point path-id index]
   "Convert a point to a sql row. First apply common point transformation

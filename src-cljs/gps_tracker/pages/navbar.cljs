@@ -32,6 +32,12 @@
        (r/attrs
         {:id :waypoint-paths-index}
         (fn [page] (address `(:page :navigate ~page))))
-       "Waypoint Paths"]]]
+       "Waypoint Paths"]]
+     [:li
+      [:a
+       (r/attrs
+        {:id :tracking-paths-index}
+        (fn [page] (address `(:page :navigate ~page))))
+       "Tracking Paths"]]]
       (when remote?
         (Spinner spinner-options))]])

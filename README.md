@@ -4,13 +4,12 @@ lein figwheel
 cider-connect 7888
 load env/dev/clj/gps_tracker/env.clj
 
-Todo:
+Todo
 --------------------------
 
-Add checkpoints (remote-id -> state) in order to revert changes
-Eavesdrop of remote errors and revert state
+Refactor waypoint path/tracking path
 
-Add tracking
+Implement delete for tracking paths (with checkpoints)
 
 Redirect to not found page server side
 
@@ -32,6 +31,8 @@ Add authentication/authorization.
 
 Bring libraries up to date.
 
+Create migrations ns.
+
 Allow waypoints to be moved on waypoint creation map.
 
 Fix % in bidi and convert dates in urls to iso time instead of long
@@ -39,8 +40,14 @@ Fix % in bidi and convert dates in urls to iso time instead of long
 Maybe
 --------------------
 
+Cleanup eavesdrop
+
 Do delegations automagically
 
 Only use list notation for namespace routing, maps else
 
-Figure out some way to manage app state and pure, sync effects, async effects
+Figure out some way to manage app state and pure, sync effects, async effects (helps with testablility)
+
+Add tests for actions with side effects
+
+Switch to rest API
