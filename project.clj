@@ -6,7 +6,6 @@
                  [cljsjs/google-maps "3.18-1"]
                  [cljsjs/react-dom-server "0.14.3-0" :exclusions [cljsjs/react]]
                  [cljsjs/spin "2.3.2-0"]
-                 [com.cemerick/piggieback "0.2.1"]
                  [compojure "1.4.0"]
                  [environ "1.0.0"]
                  [hiccup "1.0.5"]
@@ -35,8 +34,7 @@
             [lein-heroku "0.5.3"]
             [lein-ancient "0.6.7"]
             [lein-figwheel "0.5.0-4"]
-            [lein-cljsbuild "1.1.3"]
-            [cider/cider-nrepl "0.11.0-SNAPSHOT"]]
+            [lein-cljsbuild "1.1.3"]]
 
   :heroku {:app-name "fierce-dawn-3931"}
 
@@ -74,8 +72,6 @@
              :figwheel     {:http-server-root "public"
                             :server-port      3449
                             :nrepl-port       7888
-                            :nrepl-middleware ["cider.nrepl/cider-middleware"
-                                               "cemerick.piggieback/wrap-cljs-repl"]
                             :css-dirs         ["resources/public/css"]}
 
              :repl-options {:init-ns gps-tracker.env}

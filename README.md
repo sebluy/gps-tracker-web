@@ -40,6 +40,8 @@ Fix % in bidi and convert dates in urls to iso time instead of long
 Maybe
 --------------------
 
+Move all remote related stuff to remote (checkpoints, waypoint paths, tracking paths)
+
 Cleanup eavesdrop
 
 Do delegations automagically
